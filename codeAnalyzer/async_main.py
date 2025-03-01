@@ -1,5 +1,6 @@
 import os
-from ollama import chat
+import asyncio
+from ollama import AsyncClient
 from pydantic import BaseModel
 
 # Constants for model and directories
@@ -64,7 +65,7 @@ def read_files(file_paths: list) -> list:
     return code_files
 
 
-def file_type_identifier(llm_model: str, code_contents: dict) -> FileTypeAnalysis:
+async def file_type_identifier(llm_model: str, code_contents: dict) -> FileTypeAnalysis:
     """
     Identify the file type and related programming language using an LLM.
 
@@ -96,9 +97,9 @@ def file_type_identifier(llm_model: str, code_contents: dict) -> FileTypeAnalysi
     }
 
     message = [system_prompt, user_prompt]
-    chat_completion = chat(
-        llm_model,
-        message,
+    chat_completion = await AsyncClient().chat(
+        model=llm_model,
+        messages=message,
         options={"temperature": 0.3, "num_ctx": 2048},
         format=FileTypeAnalysis.model_json_schema(),
     )
@@ -108,7 +109,7 @@ def file_type_identifier(llm_model: str, code_contents: dict) -> FileTypeAnalysi
     return response
 
 
-def code_usage_analyzer(llm_model: str, code_contents: dict) -> FileFunctionAnalysis:
+async def code_usage_analyzer(llm_model: str, code_contents: dict) -> FileFunctionAnalysis:
     """
     Analyze a file to determine its function and key components.
 
@@ -148,9 +149,9 @@ def code_usage_analyzer(llm_model: str, code_contents: dict) -> FileFunctionAnal
     }
 
     message = [system_prompt, user_prompt]
-    chat_completion = chat(
-        llm_model,
-        message,
+    chat_completion = await AsyncClient().chat(
+        model=llm_model,
+        messages=message,
         options={"temperature": 0.3, "num_ctx": 8000},
         format=FileFunctionAnalysis.model_json_schema(),
     )
@@ -160,7 +161,7 @@ def code_usage_analyzer(llm_model: str, code_contents: dict) -> FileFunctionAnal
     return response
 
 
-def program_overview_analyzer(llm_model: str, context: list) -> str:
+async def program_overview_analyzer(llm_model: str, context: list) -> str:
     """Analyze the overall purpose of the project based on the analyzed files."""
     print("\nAnalyzing overall program purpose...")
 
@@ -182,8 +183,8 @@ def program_overview_analyzer(llm_model: str, context: list) -> str:
     # Append the user prompt at the end of the context list
     context.append(user_prompt)
 
-    chat_completion = chat(
-        llm_model,
+    chat_completion = await AsyncClient().chat(
+        model=llm_model,
         messages=context,
         options={"temperature": 0.3, "num_ctx": 16000},
     )
@@ -192,8 +193,31 @@ def program_overview_analyzer(llm_model: str, context: list) -> str:
     print("Program overview analysis complete.")
     return response
 
+async def fileTypeTask(llm_model: str, code_contents: dict) -> dict:
+    file_type_results = {}
+    file_type_analysis = await file_type_identifier(llm_model, code_contents)
+    file_type_results[file_type_analysis.filename] = (
+            file_type_analysis  # Store results
+    )
+    response ={
+        "role": "user",
+        "content": f"**Filename:** {file_type_analysis.filename}, **File Type:** {file_type_analysis.file_type}, **Related Programming Language:** {file_type_analysis.related_programming_language}",
+    }
+    return response
 
-def main():
+async def fileFunctionTask(llm_model: str, code_contents: dict) -> dict:
+    file_function_analysis = await code_usage_analyzer(llm_model, code_contents)
+    response = {
+        "role": "user",
+        "content": f"""**Filename:** {file_function_analysis.filename}, 
+        **File Type:** {file_function_analysis.file_type}, 
+        **File Function:** {file_function_analysis.file_function}, 
+        **Summary:** {file_function_analysis.summary}, 
+        **Key Components:** {', '.join(file_function_analysis.key_components)}""",
+    }
+    return response
+
+async def main():
     """
     Main function to analyze files in the input directory.
     Identifies file types and functions using an LLM.
@@ -209,38 +233,18 @@ def main():
 
     # Step 2: Identify programming language and file type
     print("\nIdentifying file types...")
-    file_type_results = {}
-    for content in file_contents:
-        file_type_analysis = file_type_identifier(LLM_MODEL, content)
-        file_type_results[file_type_analysis.filename] = (
-            file_type_analysis  # Store results
-        )
-
-        context.append(
-            {
-                "role": "user",
-                "content": f"**Filename:** {file_type_analysis.filename}, **File Type:** {file_type_analysis.file_type}, **Related Programming Language:** {file_type_analysis.related_programming_language}",
-            }
-        )
+    file_type_tasks = [fileTypeTask(LLM_MODEL, content) for content in file_contents ]
+    file_analysis_results = await asyncio.gather(*file_type_tasks)
+    context += file_analysis_results
 
     # Step 3: Identify file function
     print("\nIdentifying file functions...")
-    for content in file_contents:
-        file_function_analysis = code_usage_analyzer(LLM_MODEL, content)
-
-        context.append(
-            {
-                "role": "user",
-                "content": f"""**Filename:** {file_function_analysis.filename}, 
-                **File Type:** {file_function_analysis.file_type}, 
-                **File Function:** {file_function_analysis.file_function}, 
-                **Summary:** {file_function_analysis.summary}, 
-                **Key Components:** {', '.join(file_function_analysis.key_components)}""",
-            }
-        )
+    file_function_tasks = [fileFunctionTask(LLM_MODEL, content) for content in file_contents ]
+    file_function_results = await asyncio.gather(*file_function_tasks)
+    context += file_function_results
 
     # Step 4: Analyze overall program
-    program_overview = program_overview_analyzer(LLM_MODEL, context)
+    program_overview = await program_overview_analyzer(LLM_MODEL, context)
     print("\nAnalysis completed successfully.")
 
     # Step 5: Save results to output directory
@@ -251,4 +255,4 @@ def main():
     print(f"Analysis results saved to: {OUTPUT_DIR}")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
