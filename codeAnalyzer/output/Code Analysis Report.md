@@ -1,41 +1,66 @@
-# Detailed Summary of the Program
+**VirusTotal Scanning Tool Analysis**
+=====================================
 
-The provided Python project is designed to perform network and file scanning using the VirusTotal API. Here's a breakdown of its functionality:
+### Overview
 
-## 1. Project Overview
-This tool allows users to scan various data types (IP addresses, URLs, and files) using the VirusTotal service. It efficiently handles multiple requests asynchronously, making it suitable for large-scale operations.
+The provided codebase consists of three files: `requirements.txt`, `utils.py`, and `main.py`. These files are part of a VirusTotal scanning tool designed to scan IP addresses, URLs, and files using the VirusTotal API.
 
-## 2. Key Components
+### Requirements Management
+---------------------------
 
-- **Dependencies**: The project relies on specific Python packages for asynchronous network handling, including aiohttp, asynctio, and async-timeout. These are complemented by tools like attrs, autopep8, and pycodestyle for code quality and formatting.
+* **File:** `requirements.txt`
+* **Functionality:** Dependency management
+* **Summary:** This file specifies the required Python packages and their versions for the project. The listed dependencies include:
+	+ aiohttp
+	+ aiosignal
+	+ async-timeout
+	+ attrs
+	+ autopep8
+	+ certifi
+	+ charset-normalizer
+	+ frozenlist
+	+ idna
+	+ install
+	+ multidict
+	+ pycodestyle
+	+ requests
+	+ toml
+	+ urllib3
+	+ vt-py (VirusTotal API client)
+	+ yarl
 
-- **Utility Module (utils.py)**: This module contains functions to scan IPs, URLs, and files using the VirusTotal API. It employs asyncio for non-blocking network requests and includes robust exception handling to manage potential errors during API interactions.
+### Utility Functions
+----------------------
 
-- **Main Execution (main.py)**: The main script reads input queries from a file, processes each query type separately, and combines results. It uses asynchronous task queuing to handle multiple requests efficiently, ensuring quick responses even with high volumes of data.
+* **File:** `utils.py`
+* **Functionality:** Utility functions for scanning IP addresses, URLs, and files
+* **Summary:** This file provides utility functions for scanning IP addresses, URLs, and files using the VirusTotal API. The key components include:
+	+ Asyncio support for concurrent execution of scans
+	+ VirusTotal API client implementation
+	+ `ipScan` function for scanning IP addresses
+	+ `urlScan` function for scanning URLs
+	+ `fileScan` function for scanning files
 
-## 3. Functionality Breakdown
+### Main Entry Point
+--------------------
 
-- **Reading Input**: The script reads input from a file containing IP addresses, URLs, or file paths.
-  
-- **API Key Handling**: Properly manages API keys for VirusTotal, ensuring secure access to the service.
+* **File:** `main.py`
+* **Functionality:** Entry point for the VirusTotal scanning tool
+* **Summary:** This file serves as the main entry point for the VirusTotal scanning tool. It:
+	1. Reads input queries from a file named `input.txt`
+	2. Categorizes the queries into IP, URL, and File types
+	3. Uses the VirusTotal API to scan each query in parallel using asyncio
+	4. Utilizes the utility functions implemented in `utils.py` for scanning
 
-- **Regex Patterns**: Validates and sanitizes input using regex patterns to ensure data integrity before processing.
+### Program Flow
+-----------------
 
-- **Asynchronous Task Queuing**: Utilizes task queues to handle multiple requests concurrently, enhancing performance and efficiency.
+1. The program reads input queries from a file named `input.txt`.
+2. It categorizes the queries into IP, URL, and File types.
+3. For each query type, it uses the corresponding scanning function (e.g., `ipScan`, `urlScan`, or `fileScan`) to scan the query using the VirusTotal API.
+4. The program utilizes asyncio for concurrent execution of scans.
 
-- **VirusTotal Interaction**: Uses the vt library to interact with VirusTotal's API for scanning. This allows the tool to leverage VirusTotal's comprehensive file and URL scanning capabilities.
+### Conclusion
+----------
 
-- **Result Processing**: Aggregates results from VirusTotal and displays them, providing detailed analysis reports for each query type.
-
-## 4. Use Cases
-This tool is ideal for:
-- Network administrators needing to scan IP addresses for threat detection.
-- Security researchers analyzing URLs for potential malicious activity.
-- System administrators scanning files for viruses or malware.
-
-## 5. Advantages
-- **Asynchronous Processing**: Handles multiple requests efficiently without blocking, making it suitable for high-throughput tasks.
-- **Robust Error Handling**: Includes exception handling to manage API errors and unexpected issues during data processing.
-- **Comprehensive Analysis**: Provides detailed results from VirusTotal, offering insights into potential threats.
-
-In summary, this tool is a powerful network and file scanning utility that leverages the VirusTotal API for comprehensive threat detection analysis. Its asynchronous design ensures efficient processing of multiple queries, making it a valuable resource for security professionals and researchers.
+The provided codebase is designed to create a VirusTotal scanning tool that can efficiently scan IP addresses, URLs, and files in parallel using the VirusTotal API. The tool is built on top of Python 3.x and utilizes various libraries for dependency management, async programming, and API interactions.

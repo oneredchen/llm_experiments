@@ -5,14 +5,13 @@ from ollama import AsyncClient
 from pydantic import BaseModel
 
 # Constants for model and directories
-LLM_MODEL = "deepseek-r1:8b"
+LLM_MODEL = "llama3.2"
 INPUT_DIR = os.path.join(os.getcwd(), "input")
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 
 
 class FileTypeAnalysis(BaseModel):
     """Pydantic model for storing file type analysis results."""
-
     filename: str
     file_type: str
     related_programming_language: str
