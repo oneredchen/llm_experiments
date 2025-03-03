@@ -70,6 +70,3 @@ The `program_overview_analyzer()` function:
 ## License
 This project is licensed under the MIT License.
 
-## Contact
-For issues and suggestions, please create a GitHub issue or reach out to `your.email@example.com`.
-
