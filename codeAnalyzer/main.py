@@ -5,13 +5,14 @@ from ollama import AsyncClient
 from pydantic import BaseModel
 
 # Constants for model and directories
-LLM_MODEL = "llama3.2"
+LLM_MODEL = "deepseek-r1:32b"
 INPUT_DIR = os.path.join(os.getcwd(), "input")
 OUTPUT_DIR = os.path.join(os.getcwd(), "output")
 
 
 class FileTypeAnalysis(BaseModel):
     """Pydantic model for storing file type analysis results."""
+
     filename: str
     file_type: str
     related_programming_language: str
@@ -64,14 +65,16 @@ def read_files(file_paths: list) -> list:
     print(f"Successfully read {len(code_files)} files.")
     return code_files
 
+
 def clean_llm_response(response_text: str) -> str:
     """
     Removes the <think>...</think> portion from the LLM response.
-    
+
     :param response_text: The raw response text from the LLM.
     :return: Cleaned response text without the <think> section.
     """
     return re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL).strip()
+
 
 async def file_type_identifier(llm_model: str, code_contents: dict) -> FileTypeAnalysis:
     """
@@ -117,7 +120,9 @@ async def file_type_identifier(llm_model: str, code_contents: dict) -> FileTypeA
     return response
 
 
-async def code_usage_analyzer(llm_model: str, code_contents: dict) -> FileFunctionAnalysis:
+async def code_usage_analyzer(
+    llm_model: str, code_contents: dict
+) -> FileFunctionAnalysis:
     """
     Analyze a file to determine its function and key components.
 
@@ -201,17 +206,17 @@ async def program_overview_analyzer(llm_model: str, context: list) -> str:
     print("Program overview analysis complete.")
     return clean_llm_response(response)
 
+
 async def fileTypeTask(llm_model: str, code_contents: dict) -> dict:
     file_type_results = {}
     file_type_analysis = await file_type_identifier(llm_model, code_contents)
-    file_type_results[file_type_analysis.filename] = (
-            file_type_analysis  # Store results
-    )
-    response ={
+    file_type_results[file_type_analysis.filename] = file_type_analysis  # Store results
+    response = {
         "role": "user",
         "content": f"**Filename:** {file_type_analysis.filename}, **File Type:** {file_type_analysis.file_type}, **Related Programming Language:** {file_type_analysis.related_programming_language}",
     }
     return response
+
 
 async def fileFunctionTask(llm_model: str, code_contents: dict) -> dict:
     file_function_analysis = await code_usage_analyzer(llm_model, code_contents)
@@ -224,6 +229,7 @@ async def fileFunctionTask(llm_model: str, code_contents: dict) -> dict:
         **Key Components:** {', '.join(file_function_analysis.key_components)}""",
     }
     return response
+
 
 async def main():
     """
@@ -241,13 +247,15 @@ async def main():
 
     # Step 2: Identify programming language and file type
     print("\nIdentifying file types...")
-    file_type_tasks = [fileTypeTask(LLM_MODEL, content) for content in file_contents ]
+    file_type_tasks = [fileTypeTask(LLM_MODEL, content) for content in file_contents]
     file_analysis_results = await asyncio.gather(*file_type_tasks)
     context += file_analysis_results
 
     # Step 3: Identify file function
     print("\nIdentifying file functions...")
-    file_function_tasks = [fileFunctionTask(LLM_MODEL, content) for content in file_contents ]
+    file_function_tasks = [
+        fileFunctionTask(LLM_MODEL, content) for content in file_contents
+    ]
     file_function_results = await asyncio.gather(*file_function_tasks)
     context += file_function_results
 
@@ -259,8 +267,9 @@ async def main():
     print("\nSaving analysis results...")
     with open(os.path.join(OUTPUT_DIR, "Code Analysis Report.md"), "w") as f:
         f.write(program_overview)
-    
+
     print(f"Analysis results saved to: {OUTPUT_DIR}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
