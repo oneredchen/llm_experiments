@@ -171,4 +171,6 @@ cython_debug/
 .pypirc
 
 # Non-essential files
-agentic_investigator*
+agentic_investigator/
+input/
+output/
