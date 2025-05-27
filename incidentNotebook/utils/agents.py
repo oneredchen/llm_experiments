@@ -4,6 +4,7 @@ from langgraph.graph.message import add_messages
 from langchain_ollama import ChatOllama
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
+from .database import get_database_dialect
 
 
 class SQLStatementList(BaseModel):
@@ -19,6 +20,7 @@ class IOCExtractionState(TypedDict):
     network_ioc_sql_stmts: list[str] | None
     timeline_sql_stmts: list[str] | None
     result: dict[str, list[str]] | None
+    database_dialect: str | None
 
 
 def host_ioc_agent(state: IOCExtractionState):
@@ -28,11 +30,13 @@ def host_ioc_agent(state: IOCExtractionState):
     """
     last_message = state["messages"][-1]
     llm = state["llm"]
+    dialect = state["database_dialect"]
     messages = [
         {
             "role": "system",
-            "content": """You are a cybersecurity analyst and SQL expert.
+            "content": f"""You are a cybersecurity analyst and SQL expert.
        Your task is to extract only **host-based indicators of compromise (IOCs)** from the incident narrative provided.
+       Please note that the table is called `host_ioc` and you must generate valid SQL INSERT statements for this {dialect} table.
         **Do NOT include any network-related IOCs** such as IP addresses, domains, or URLs.
 
         The target table has the following columns:
@@ -74,14 +78,14 @@ def network_ioc_agent(state: IOCExtractionState):
     """
     last_message = state["messages"][-1]
     llm = state["llm"]
-
+    dialect = state["database_dialect"]
     messages = [
         {
             "role": "system",
-            "content": """You are a cybersecurity analyst and SQL expert.
+            "content": f"""You are a cybersecurity analyst and SQL expert.
                 Your task is to extract only network-based indicators of compromise (IOCs) from the provided incident description.
                 Exclude any host-based indicators such as file names, registry paths, executables, or processes.
-
+                Please note that the table is called `network_ioc` and you must generate valid SQL INSERT statements for this {dialect} table.
                 You must generate valid SQL INSERT statements for the `network_ioc` table only.
 
                 Table columns:
@@ -123,12 +127,15 @@ def timeline_ioc_agent(state: IOCExtractionState):
     """
     last_message = state["messages"][-1]
     llm = state["llm"]
+    dialect = state["database_dialect"]
     messages = [
         {
             "role": "system",
-            "content": """You are a cybersecurity analyst and SQL expert.
-        Based on an incident narrative, generate SQL INSERT statements that populate the 'timeline' table.
-
+            "content": f"""You are a cybersecurity analyst and SQL expert.
+        Your task is to extract indicator of compromise that will help the incident responder understand the timeline of events from the provided incident description.
+        Please note that the table is called `timeline` and you must generate valid SQL INSERT statements for this {dialect} table.
+        The 'timeline' table is used to track significant events and activities related to the case.
+        Your task is to extract relevant activities and behaviors, including timestamps, system names, and attack alignments.
         Use this column structure:
         - case_id (str): identifier linking to the case (e.g., 'CAS-1234-XY')
         - submitted_by (str)
@@ -229,6 +236,7 @@ def ioc_extraction_agent_workflow(
         "host_ioc_sql_stmts": None,
         "network_ioc_sql_stmts": None,
         "timeline_sql_stmts": None,
+        "database_dialect": get_database_dialect(),
     }
     state = graph.invoke(state)
     result = state["result"]

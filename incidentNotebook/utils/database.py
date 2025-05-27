@@ -207,3 +207,18 @@ def execute_insert_sql(sql_statement: str, table_name: str):
         except Exception as e:
             print(f"Failed to insert into '{table_name}': {e}")
             return False
+
+
+# Get Database dialect
+def get_database_dialect() -> str:
+    """
+    Returns the dialect name of the given SQLAlchemy engine.
+
+    Args:
+        engine (sqlalchemy.engine.Engine): The SQLAlchemy engine object.
+
+    Returns:
+        str: The name of the database dialect (e.g., 'sqlite', 'postgresql', 'mysql').
+    """
+    engine = create_engine(f"sqlite:///{db_path}")
+    return engine.dialect.name

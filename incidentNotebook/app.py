@@ -9,6 +9,8 @@ cases_df = databases["cases"]
 
 # Streamlit Setup
 st.set_page_config(page_title="Incident Notebook")
+if "ioc_extracted" not in st.session_state:
+    st.session_state.ioc_extracted = False
 
 # Sidebar for case selection or creation
 st.sidebar.title("Case Management")
@@ -57,6 +59,7 @@ llm_model = st.selectbox(
 if llm_model and selected_case:
     # User Input
     incident_description = st.text_area("Incident Description")
+    extract_iocs_btn = st.button("Extract IOCs")
 
     # Display DataFrames
     timeline_tab, host_tab, network_tab = st.tabs(["Timeline", "Host", "Network"])
@@ -74,7 +77,11 @@ if llm_model and selected_case:
         st.dataframe(network_ioc_df, hide_index=True)
 
     # Extracting IOCs
-    if incident_description:
+    if extract_iocs_btn:
+        st.session_state.ioc_extracted = True
+        st.session_state.incident_description = incident_description
+
+    if st.session_state.ioc_extracted and selected_case and llm_model:
         with st.spinner("Extracting IOCs..."):
             # Call the IOC extraction agent workflow
             result = ioc_extraction_agent_workflow(
@@ -90,4 +97,6 @@ if llm_model and selected_case:
 
             for stmt in result.get("timeline_sql_stmts", []):
                 execute_insert_sql(stmt, "timeline")
+
             st.success("IOCs extracted successfully!")
+            st.session_state.ioc_extracted = False
