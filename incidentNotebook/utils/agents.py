@@ -1,4 +1,5 @@
 from typing import Annotated, List
+from datetime import datetime, timezone
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_ollama import ChatOllama
@@ -31,37 +32,59 @@ def host_ioc_agent(state: IOCExtractionState):
     last_message = state["messages"][-1]
     llm = state["llm"]
     dialect = state["database_dialect"]
+    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     messages = [
         {
             "role": "system",
-            "content": f"""You are a cybersecurity analyst and SQL expert.
-       Your task is to extract only **host-based indicators of compromise (IOCs)** from the incident narrative provided.
-       Please note that the table is called `host_ioc` and you must generate valid SQL INSERT statements for this {dialect} table.
-        **Do NOT include any network-related IOCs** such as IP addresses, domains, or URLs.
+            "content": f"""You are a cybersecurity analyst and SQL expert. Extract ONLY **host-based** IOCs from the incident narrative and produce valid {dialect} (SQLite) INSERT statements for the `host_ioc` table.
 
-        The target table has the following columns:
-        - case_id (str): identifier linking to the parent case (e.g., 'CAS-1234-XY')
-        - submitted_by (str)
-        - date_added (UTC ISO format preferred)
-        - source (str): where the IOC was obtained from (e.g., 'CrowdStrike', 'Sysmon')
-        - status (str): such as 'Confirmed', 'Suspected', 'Benign'
-        - indicator_id (str): must be unique
-        - indicator_type (str): e.g., 'file', 'process', 'registry'
-        - indicator (str): e.g., 'mimikatz.exe'
-        - full_path (str): e.g., 'C:\\Windows\\Temp\\mimi.exe'
-        - sha256, sha1, md5 (str): hashes if available
-        - type_purpose (str): e.g., 'Credential Dumping'
-        - size_bytes (int): file size in bytes
-        - notes (text): any multiline analyst comments
+            SQLITE_RULES:
+            - Dialect: SQLite.
+            - Always INSERT into the specified table only. Do not emit any other SQL type.
+            - Always include an explicit column list in INSERT.
+            - Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
+            - Use NULL (unquoted) when a field is unknown rather than an empty string.
+            - Datetimes must be UTC ISO-8601 with Z suffix, e.g., '2025-08-17T04:21:00Z'.
+            - Integers must be unquoted (e.g., size_bytes).
+            - Limit output to a maximum of 20 INSERT statements.
+            - Deduplicate rows by semantic equivalence (case-insensitive for strings, normalized for paths/hosts).
+            - Never repeat indicator_id values within the same output list.
+            - Use the provided case_id for every row.
 
-        Respond ONLY with a list of SQL INSERT statements, formatted like:
+            HOST_IOC_SCOPE (allowed):
+            - Files, processes, services, drivers, DLLs, local executables
+            - Registry keys/values
+            - Local file paths
+            - Scheduled tasks
+            - Local user/host artifacts (NOT network identifiers)
 
-        INSERT INTO host_ioc (case_id, submitted_by, source, status, indicator_id, indicator_type, indicator, full_path, sha256, sha1, md5, type_purpose, size_bytes, notes)
-        VALUES ('CAS-1234-XY', 'analyst1', 'Sysmon', 'Confirmed', 'IOC-001', 'file', 'mimikatz.exe', 'C:\\Windows\\Temp\\mimikatz.exe', '...', '...', '...', 'Credential Dumping', 124000, 'Identified from lateral movement tool use');
+            OUT OF SCOPE (exclude completely):
+            - Any IP addresses (v4/v6), domains, FQDNs, URLs, URIs, ports, beacons
+            - Pure network telemetry (flows, DNS-only data)
+            - High-level events without a host artifact
 
-        If there are NO host-based IOCs in the narrative, return an **empty list**: `[]`
-        Avoid any explanation or comments.
-        """,
+            TABLE & COLUMNS (complete list, keep order):
+            INSERT INTO host_ioc (
+            case_id, submitted_by, date_added, source, status,
+            indicator_id, indicator_type, indicator, full_path,
+            sha256, sha1, md5, type_purpose, size_bytes, notes
+            )
+            VALUES (...);
+
+            REQUIREMENTS:
+            - `indicator_type` must be one of: 'file','process','registry','service','driver','scheduled_task'
+            - `submitted_by`, `source`, and `status` must be short, human labels (e.g., 'analyst1','Sysmon','Confirmed').
+            - `date_added` must be exactly '{now_utc}'.
+            - `size_bytes` must be an integer or NULL.
+            - If hashes are absent, use NULL for that field(s).
+            - `indicator_id` must be unique within output and follow: '{{case_id}}-H-{{001..}}' (zero-padded sequence based on occurrence order in your output).
+            - Do not invent file paths; if unknown, use NULL for `full_path`.
+            - Truncate `notes` to <= 800 characters.
+
+            OUTPUT:
+            - Only a Python list of INSERT statements as strings (no commentary).
+            - If no host IOCs exist, return [].
+            """,
         },
         {"role": "user", "content": last_message.content},
     ]
@@ -79,37 +102,57 @@ def network_ioc_agent(state: IOCExtractionState):
     last_message = state["messages"][-1]
     llm = state["llm"]
     dialect = state["database_dialect"]
+    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     messages = [
         {
             "role": "system",
-            "content": f"""You are a cybersecurity analyst and SQL expert.
-                Your task is to extract only network-based indicators of compromise (IOCs) from the provided incident description.
-                Exclude any host-based indicators such as file names, registry paths, executables, or processes.
-                Please note that the table is called `network_ioc` and you must generate valid SQL INSERT statements for this {dialect} table.
-                You must generate valid SQL INSERT statements for the `network_ioc` table only.
+            "content": f"""You are a cybersecurity analyst and SQL expert. Extract ONLY **network-based** IOCs from the incident narrative and produce valid {dialect} (SQLite) INSERT statements for the `network_ioc` table.
 
-                Table columns:
-                - case_id (str)
-                - submitted_by (str)
-                - date_added (datetime in ISO 8601 format)
-                - source (str)
-                - status (str)
-                - indicator_id (str, unique)
-                - indicator_type (str): e.g., 'IP address', 'domain', 'URL'
-                - indicator (str)
-                - initial_lead (str)
-                - details_comments (str)
-                - earliest_evidence_utc (datetime in ISO 8601 format)
-                - attack_alignment (str)
-                - notes (text)
+                SQLITE_RULES:
+                - Dialect: SQLite.
+                - Always INSERT into the specified table only. Do not emit any other SQL type.
+                - Always include an explicit column list in INSERT.
+                - Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
+                - Use NULL (unquoted) when a field is unknown rather than an empty string.
+                - Datetimes must be UTC ISO-8601 with Z suffix, e.g., '2025-08-17T04:21:00Z'.
+                - Integers must be unquoted.
+                - Limit output to a maximum of 20 INSERT statements.
+                - Deduplicate indicators (case-insensitive for domains; canonicalize IPs).
+                - Never repeat indicator_id values within the same output list.
+                - Use the provided case_id for every row.
 
-                Only respond with a list of SQL INSERT statements. Example:
+                NETWORK_IOC_SCOPE (allowed):
+                - IP addresses (v4/v6), domains, FQDNs, URLs/URIs
+                - Ports if strongly bound to the indicator/lead
+                - JA3/JA3S fingerprints if explicitly present
+                - C2 / beaconing endpoints from proxy/firewall/EDR logs
 
-                INSERT INTO network_ioc (case_id, submitted_by, source, status, indicator_id, indicator_type, indicator, initial_lead, details_comments, earliest_evidence_utc, attack_alignment, notes)
-                VALUES ('CAS-1234-XY', 'analyst1', 'Firewall', 'Confirmed', 'IOC-001', 'IP address', '45.77.33.12', 'Detected via beaconing', 'Matches threat intel feed', '2023-10-01T03:12:00Z', 'Command and Control', 'Related to beaconing activity');
+                OUT OF SCOPE (exclude completely):
+                - File names/paths, processes, registry, scheduled tasks, host-side artifacts
+                - Generic events without a network indicator
 
-                If the incident contains no network-based IOCs, respond with an empty list: []
-                Do not include any commentary, explanations, or unrelated IOCs.
+                TABLE & COLUMNS (complete list, keep order):
+                INSERT INTO network_ioc (
+                case_id, submitted_by, date_added, source, status,
+                indicator_id, indicator_type, indicator,
+                initial_lead, details_comments, earliest_evidence_utc,
+                attack_alignment, notes
+                )
+                VALUES (...);
+
+                REQUIREMENTS:
+                - `indicator_type` must be one of: 'ip','domain','fqdn','url','uri','ja3','ja3s'.
+                - Normalize domains to lowercase; preserve URLs as seen.
+                - `submitted_by`, `source`, `status` should be concise labels.
+                - `date_added` must be exactly '{now_utc}'.
+                - `earliest_evidence_utc` must be ISO-8601 with Z if present; else NULL.
+                - `indicator_id` must be unique in output and follow: '{{case_id}}-N-{{001..}}'.
+                - Keep `attack_alignment` concise (MITRE style) if clearly implied; else NULL.
+                - Truncate `notes` to <= 800 chars.
+
+                OUTPUT:
+                - Only a Python list of INSERT statements as strings (no commentary).
+                - If no network IOCs exist, return [].
                 """,
         },
         {"role": "user", "content": last_message.content},
@@ -128,37 +171,54 @@ def timeline_ioc_agent(state: IOCExtractionState):
     last_message = state["messages"][-1]
     llm = state["llm"]
     dialect = state["database_dialect"]
+    now_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     messages = [
         {
             "role": "system",
-            "content": f"""You are a cybersecurity analyst and SQL expert.
-        Your task is to extract indicator of compromise that will help the incident responder understand the timeline of events from the provided incident description.
-        Please note that the table is called `timeline` and you must generate valid SQL INSERT statements for this {dialect} table.
-        The 'timeline' table is used to track significant events and activities related to the case.
-        Your task is to extract relevant activities and behaviors, including timestamps, system names, and attack alignments.
-        Use this column structure:
-        - case_id (str): identifier linking to the case (e.g., 'CAS-1234-XY')
-        - submitted_by (str)
-        - date_added (ISO datetime in UTC)
-        - status_tag (str): e.g., 'Confirmed', 'Suspicious', 'Benign'
-        - system_name (str): e.g., 'HOST-123'
-        - timestamp_utc (ISO datetime): when the activity occurred
-        - timestamp_type (str): e.g., 'Creation Time', 'Execution Time'
-        - activity (str): observed behavior (e.g., 'psexec launched', 'mimikatz used')
-        - evidence_source (str): e.g., 'MFT', 'Sysmon', 'CrowdStrike'
-        - details_comments (text): context or observations
-        - attack_alignment (str): MITRE tactic (e.g., 'Persistence', 'Credential Access')
-        - size_bytes (int): size of file or payload if applicable
-        - hash (str): file or artifact hash
-        - notes (text): analyst comments
+            "content": f"""You are a cybersecurity analyst and SQL expert. Extract **timeline events** (not raw IOCs) from the incident narrative and produce valid {dialect} (SQLite) INSERT statements for the `timeline` table.
 
-        Example format:
+                SQLITE_RULES:
+                - Dialect: SQLite.
+                - Always INSERT into the specified table only. Do not emit any other SQL type.
+                - Always include an explicit column list in INSERT.
+                - Strings must be single-quoted; escape internal quotes by doubling them.
+                - Use NULL (unquoted) when a field is unknown rather than an empty string.
+                - Datetimes must be UTC ISO-8601 with Z suffix.
+                - Integers must be unquoted.
+                - Limit output to a maximum of 20 INSERT statements.
+                - Use the provided case_id for every row.
 
-        INSERT INTO timeline (case_id, submitted_by, date_added, status_tag, system_name, timestamp_utc, timestamp_type, activity, evidence_source, details_comments, attack_alignment, size_bytes, hash, notes)
-        VALUES ('CAS-1234-XY', 'analyst1', '2024-10-01T10:00:00Z', 'Confirmed', 'CORP-WEB-02', '2024-09-30T22:15:30Z', 'Execution Time', 'Mimikatz run from temp directory', 'Sysmon', 'Observed credential dumping behavior', 'Credential Access', 204800, 'abc123...', 'Detected during post-breach investigation');
+                TIMELINE_SCOPE (include):
+                - Discrete activities with timestamps or clear temporal ordering
+                - Actor/tool behaviors (e.g., 'psexec launched', 'credential dump'), hostnames, and sources
+                - Evidence sources (e.g., 'Sysmon', 'MFT', 'Firewall')
 
-        Only output a list of valid SQL INSERT statements. No explanations or extra text.
-        """,
+                OUT OF SCOPE:
+                - Pure indicators without an “event” context
+                - Free-floating IOCs with no time semantics
+
+                TABLE & COLUMNS (complete list, keep order):
+                INSERT INTO timeline (
+                case_id, submitted_by, date_added, status_tag, system_name,
+                timestamp_utc, timestamp_type, activity, evidence_source,
+                details_comments, attack_alignment, size_bytes, hash, notes
+                )
+                VALUES (...);
+
+                REQUIREMENTS:
+                - `timestamp_utc` must be the time the event occurred (or best specific time), ISO-8601 with Z.
+                - `timestamp_type` from {'Creation Time','Execution Time','Event Time','Discovery Time'}.
+                - `status_tag` from {'Confirmed','Suspicious','Benign'}.
+                - `system_name` must NOT be NULL. If a hostname/asset label is present, use it; otherwise use the literal 'Unknown'.
+                - `attack_alignment` concise MITRE tactic if clear; else NULL.
+                - `size_bytes` integer or NULL; `hash` string or NULL.
+                - `date_added` must be exactly '{now_utc}'.
+                - Truncate `details_comments`/`notes` to <= 1000 chars.
+
+                OUTPUT:
+                - Only a Python list of INSERT statements as strings (no commentary).
+                - If no timeline events exist, return [].
+                """,
         },
         {"role": "user", "content": last_message.content},
     ]
