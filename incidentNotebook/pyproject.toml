@@ -10,4 +10,5 @@ dependencies = [
     "pandas>=2.2.3",
     "sqlalchemy>=2.0.41",
     "streamlit>=1.45.1",
+    "python-json-logger>=2.0.7",
 ]
