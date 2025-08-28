@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal
+from typing import Annotated, List
 from datetime import datetime, timezone
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -16,18 +16,10 @@ class SQLStatementList(BaseModel):
     )
 
 
-class IOCPresence(BaseModel):
-    """Schema for indicating the presence of different IOC types."""
-    has_host_iocs: bool = Field(..., description="True if host-based IOCs are present.")
-    has_network_iocs: bool = Field(..., description="True if network-based IOCs are present.")
-    has_timeline_events: bool = Field(..., description="True if timeline events are present.")
-
-
 class IOCExtractionState(TypedDict):
     messages: Annotated[list, add_messages]
     llm: ChatOllama
     case_id: str
-    ioc_presence: IOCPresence | None
     host_ioc_sql_stmts: list[str] | None
     network_ioc_sql_stmts: list[str] | None
     timeline_sql_stmts: list[str] | None
@@ -38,23 +30,6 @@ class IOCExtractionState(TypedDict):
 # ==================================
 # AGENT PROMPTS & LOGIC
 # ==================================
-
-def triage_agent(state: IOCExtractionState):
-    """Determine which types of IOCs are present in the incident description."""
-    logger.info("Triage agent started.")
-    last_message = state["messages"][-1]
-    llm = state["llm"]
-    messages = [
-        {
-            "role": "system",
-            "content": """You are a senior cybersecurity analyst. Your task is to triage an incident description and determine if it contains host-based IOCs, network-based IOCs, or timeline events. Respond with a structured JSON object indicating the presence of each type.""",
-        },
-        {"role": "user", "content": last_message.content},
-    ]
-    response = llm.with_structured_output(IOCPresence).invoke(messages)
-    logger.info(f"Triage agent completed. IOC presence: {response}")
-    return {"ioc_presence": response}
-
 
 def host_ioc_agent(state: IOCExtractionState):
 
@@ -115,7 +90,7 @@ def host_ioc_agent(state: IOCExtractionState):
             - `size_bytes` must be an integer or NULL.
             - If hashes are absent, use NULL for that field(s).
             - `indicator_id` must be unique within output and follow: '{case_id}-H-{{001..}}' (zero-padded sequence based on occurrence order in your output).
-            - Do not invent file paths; if unknown, use NULL for `full_path`.
+            - `full_path` can be NULL if it is not available.
             - Truncate `notes` to <= 800 characters.
 
             OUTPUT:
@@ -271,18 +246,6 @@ def timeline_ioc_agent(state: IOCExtractionState):
     logger.info(f"Timeline IOC agent completed. Found {len(response.sql_statements)} statements.")
     return {"timeline_sql_stmts": response.sql_statements}
 
-def sql_quality_check_agent(state: IOCExtractionState):
-    """Agent to check and correct generated SQL statements."""
-    logger.info("SQL quality check agent started.")
-    # This is a placeholder for a more sophisticated quality check.
-    # For now, it just passes the statements through.
-    logger.info("SQL quality check agent completed.")
-    return {
-        "host_ioc_sql_stmts": state.get("host_ioc_sql_stmts", []),
-        "network_ioc_sql_stmts": state.get("network_ioc_sql_stmts", []),
-        "timeline_sql_stmts": state.get("timeline_sql_stmts", []),
-    }
-
 def ioc_result_aggregator(state: IOCExtractionState):
     """Aggregates the results from the IOC extraction agents."""
     logger.info("IOC result aggregator started.")
@@ -296,23 +259,6 @@ def ioc_result_aggregator(state: IOCExtractionState):
 
 
 # ==================================
-# CONDITIONAL EDGES
-# ==================================
-
-def should_run_host_agent(state: IOCExtractionState) -> Literal["host_ioc_extractor", "sql_quality_checker"]:
-    logger.info(f"Checking for host IOCs. Presence: {state["ioc_presence"].has_host_iocs}")
-    return "host_ioc_extractor" if state["ioc_presence"].has_host_iocs else "sql_quality_checker"
-
-def should_run_network_agent(state: IOCExtractionState) -> Literal["network_ioc_extractor", "sql_quality_checker"]:
-    logger.info(f"Checking for network IOCs. Presence: {state["ioc_presence"].has_network_iocs}")
-    return "network_ioc_extractor" if state["ioc_presence"].has_network_iocs else "sql_quality_checker"
-
-def should_run_timeline_agent(state: IOCExtractionState) -> Literal["timeline_ioc_extractor", "sql_quality_checker"]:
-    logger.info(f"Checking for timeline events. Presence: {state["ioc_presence"].has_timeline_events}")
-    return "timeline_ioc_extractor" if state["ioc_presence"].has_timeline_events else "sql_quality_checker"
-
-
-# ==================================
 # GRAPH CONSTRUCTION
 # ==================================
 
@@ -320,49 +266,21 @@ def ioc_extraction_graph_builder():
     graph_builder = StateGraph(IOCExtractionState)
 
     # Add nodes
-    graph_builder.add_node("triage_agent", triage_agent)
     graph_builder.add_node("host_ioc_extractor", host_ioc_agent)
     graph_builder.add_node("network_ioc_extractor", network_ioc_agent)
     graph_builder.add_node("timeline_ioc_extractor", timeline_ioc_agent)
-    graph_builder.add_node("sql_quality_checker", sql_quality_check_agent)
     graph_builder.add_node("ioc_result_aggregator", ioc_result_aggregator)
 
-    # Define workflow
-    graph_builder.add_edge(START, "triage_agent")
+    # Define parallel workflow
+    graph_builder.add_edge(START, "host_ioc_extractor")
+    graph_builder.add_edge(START, "network_ioc_extractor")
+    graph_builder.add_edge(START, "timeline_ioc_extractor")
 
-    # Conditional branching from triage
-    graph_builder.add_conditional_edges(
-        "triage_agent",
-        should_run_host_agent,
-        {
-            "host_ioc_extractor": "host_ioc_extractor",
-            "sql_quality_checker": "sql_quality_checker",
-        },
-    )
-    graph_builder.add_conditional_edges(
-        "triage_agent",
-        should_run_network_agent,
-        {
-            "network_ioc_extractor": "network_ioc_extractor",
-            "sql_quality_checker": "sql_quality_checker",
-        },
-    )
-    graph_builder.add_conditional_edges(
-        "triage_agent",
-        should_run_timeline_agent,
-        {
-            "timeline_ioc_extractor": "timeline_ioc_extractor",
-            "sql_quality_checker": "sql_quality_checker",
-        },
-    )
+    # Connect extractors to aggregator
+    graph_builder.add_edge("host_ioc_extractor", "ioc_result_aggregator")
+    graph_builder.add_edge("network_ioc_extractor", "ioc_result_aggregator")
+    graph_builder.add_edge("timeline_ioc_extractor", "ioc_result_aggregator")
 
-    # Connect extractors to quality checker
-    graph_builder.add_edge("host_ioc_extractor", "sql_quality_checker")
-    graph_builder.add_edge("network_ioc_extractor", "sql_quality_checker")
-    graph_builder.add_edge("timeline_ioc_extractor", "sql_quality_checker")
-
-    # Connect quality checker to aggregator
-    graph_builder.add_edge("sql_quality_checker", "ioc_result_aggregator")
     graph_builder.add_edge("ioc_result_aggregator", END)
 
     return graph_builder.compile()

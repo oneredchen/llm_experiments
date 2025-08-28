@@ -142,7 +142,7 @@ class HostIOC(Base):
     indicator_id = Column(String(256), nullable=False, unique=True, index=True)
     indicator_type = Column(String(64), nullable=False)
     indicator = Column(String(512), nullable=False)
-    full_path = Column(String(1024), nullable=False)
+    full_path = Column(String(1024), nullable=True)
     sha256 = Column(String(64))
     sha1 = Column(String(40))
     md5 = Column(String(32))
