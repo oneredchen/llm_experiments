@@ -54,6 +54,7 @@ def host_ioc_agent(state: IOCExtractionState):
             - Dialect: SQLite.
             - Always INSERT into the specified table only. Do not emit any other SQL type.
             - Always include an explicit column list in INSERT.
+            - **VERY IMPORTANT**: Ensure the number of values in the VALUES clause matches the number of columns in the INSERT INTO clause.
             - Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
             - Use NULL (unquoted) when a field is unknown rather than an empty string.
             - Datetimes must be UTC ISO-8601 with Z suffix, e.g., '2025-08-17T04:21:00Z'.
@@ -297,6 +298,9 @@ def ioc_extraction_agent_workflow(
 ):
     """Workflow for IOC extraction agent."""
     logger.info(f"Starting IOC extraction workflow for case: {case_id}")
+    logger.debug(f"LLM Model: {llm_model}")
+    logger.debug(f"Incident Description: {incident_description}")
+
     llm = ChatOllama(
         model=llm_model,
         temperature=0.2,  # Lower temperature for more deterministic output
@@ -314,6 +318,7 @@ def ioc_extraction_agent_workflow(
         "case_id": case_id,
         "database_dialect": get_database_dialect(),
     }
+    logger.info("Invoking IOC extraction graph.")
     result_state = graph.invoke(state)
     logger.info(f"IOC extraction workflow completed for case: {case_id}")
     return result_state.get("result", {})

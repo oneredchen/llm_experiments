@@ -1,5 +1,7 @@
 import streamlit as st
 import ollama
+import logging
+from logging_config import setup_logging
 from utils.agents import ioc_extraction_agent_workflow
 from utils.database import load_database, create_case, execute_insert_sql
 
@@ -136,6 +138,8 @@ def run_ioc_extraction(llm_model, selected_case, incident_description):
     st.success("IOCs extracted and saved successfully!")
 
 def main():
+    setup_logging()
+    logging.info("Application started.")
     setup_page()
     databases = load_data()
     cases_df = databases["cases"]

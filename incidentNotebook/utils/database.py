@@ -35,12 +35,6 @@ DB_PATH = DB_DIR / DB_NAME
 DB_DIR.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-logger.setLevel(logging.INFO)
 
 # ----------------------------------------------------------------------------
 # SQLAlchemy Base & Engine helpers (SQLAlchemy 2.0 style)
