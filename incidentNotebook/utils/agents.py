@@ -99,7 +99,7 @@ def host_ioc_agent(state: IOCExtractionState):
             - If no host IOCs exist, return [].
             """,
         },
-        {"role": "user", "content": last_message["content"]},
+        {"role": "user", "content": last_message.content},
     ]
 
     response = llm.with_structured_output(SQLStatementList).invoke(messages)
@@ -172,7 +172,7 @@ def network_ioc_agent(state: IOCExtractionState):
                 - If no network IOCs exist, return [].
                 """,
         },
-        {"role": "user", "content": last_message["content"]},
+        {"role": "user", "content": last_message.content},
     ]
 
     response = llm.with_structured_output(SQLStatementList).invoke(messages)
@@ -241,7 +241,7 @@ def timeline_ioc_agent(state: IOCExtractionState):
                 - If no timeline events exist, return [].
                 """,
         },
-        {"role": "user", "content": last_message["content"]},
+        {"role": "user", "content": last_message.content},
     ]
 
     response = llm.with_structured_output(SQLStatementList).invoke(messages)
