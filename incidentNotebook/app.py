@@ -94,11 +94,11 @@ def render_data_tabs(databases):
 
     tab1, tab2, tab3 = st.tabs(["Timeline", "Host IOCs", "Network IOCs"])
     with tab1:
-        st.dataframe(timeline_df, use_container_width=True)
+        st.dataframe(timeline_df, width='stretch')
     with tab2:
-        st.dataframe(host_ioc_df, use_container_width=True)
+        st.dataframe(host_ioc_df, width='stretch')
     with tab3:
-        st.dataframe(network_ioc_df, use_container_width=True)
+        st.dataframe(network_ioc_df, width='stretch')
 
 def run_ioc_extraction(llm_model, selected_case, incident_description):
     progress_bar = st.progress(0, text="Initializing IOC extraction...")

@@ -99,7 +99,7 @@ def host_ioc_agent(state: IOCExtractionState):
             - If no host IOCs exist, return [].
             """,
         },
-        {"role": "user", "content": last_message.content},
+        {"role": "user", "content": last_message["content"]},
     ]
 
     response = llm.with_structured_output(SQLStatementList).invoke(messages)
@@ -129,7 +129,7 @@ def network_ioc_agent(state: IOCExtractionState):
                 - Dialect: SQLite.
                 - Always INSERT into the specified table only. Do not emit any other SQL type.
                 - Always include an explicit column list in INSERT.
-                - Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
+                - **VERY IMPORTANT**: Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
                 - Use NULL (unquoted) when a field is unknown rather than an empty string.
                 - Datetimes must be UTC ISO-8601 with Z suffix, e.g., '2025-08-17T04:21:00Z'.
                 - Integers must be unquoted.
@@ -172,7 +172,7 @@ def network_ioc_agent(state: IOCExtractionState):
                 - If no network IOCs exist, return [].
                 """,
         },
-        {"role": "user", "content": last_message.content},
+        {"role": "user", "content": last_message["content"]},
     ]
 
     response = llm.with_structured_output(SQLStatementList).invoke(messages)
@@ -201,7 +201,8 @@ def timeline_ioc_agent(state: IOCExtractionState):
                 - Dialect: SQLite.
                 - Always INSERT into the specified table only. Do not emit any other SQL type.
                 - Always include an explicit column list in INSERT.
-                - Strings must be single-quoted; escape internal quotes by doubling them.
+                - **VERY IMPORTANT**: Ensure the number of values in the VALUES clause matches the number of columns in the INSERT INTO clause.
+                - **VERY IMPORTANT**: Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
                 - Use NULL (unquoted) when a field is unknown rather than an empty string.
                 - Datetimes must be UTC ISO-8601 with Z suffix.
                 - Integers must be unquoted.
@@ -240,7 +241,7 @@ def timeline_ioc_agent(state: IOCExtractionState):
                 - If no timeline events exist, return [].
                 """,
         },
-        {"role": "user", "content": last_message.content},
+        {"role": "user", "content": last_message["content"]},
     ]
 
     response = llm.with_structured_output(SQLStatementList).invoke(messages)
