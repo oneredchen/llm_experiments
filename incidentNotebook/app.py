@@ -65,7 +65,8 @@ def render_main_content(databases, selected_case):
 
     col1, col2 = st.columns(2)
     with col1:
-        list_of_models = ollama.list()["models"]
+        client = ollama.Client(host="http://192.168.50.21:11434")
+        list_of_models = client.list()["models"]
         model_names = [model["model"] for model in list_of_models]
         llm_model = st.selectbox(
             "Select LLM Model",

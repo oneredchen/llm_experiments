@@ -8,7 +8,7 @@ from typing_extensions import TypedDict
 from .database import get_database_dialect
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) 
 
 class SQLStatementList(BaseModel):
     sql_statements: List[str] = Field(
@@ -302,6 +302,7 @@ def ioc_extraction_agent_workflow(
     logger.debug(f"Incident Description: {incident_description}")
 
     llm = ChatOllama(
+        base_url="http://192.168.50.21:11434",
         model=llm_model,
         temperature=0.2,  # Lower temperature for more deterministic output
         num_predict=-2,
