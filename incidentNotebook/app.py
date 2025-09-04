@@ -3,7 +3,7 @@ import ollama
 import logging
 from logging_config import setup_logging
 from utils.agents import ioc_extraction_agent_workflow
-from utils.database import load_database, create_case, execute_insert_sql
+from utils.database import load_database, create_case, execute_insert_sql, delete_case
 
 def setup_page():
     st.set_page_config(page_title="Incident Notebook", layout="wide")
@@ -39,6 +39,20 @@ def render_sidebar(cases_df):
                 else:
                     st.error("Case Name is required.")
         
+        if selected_case:
+            with st.expander("Delete Case"):
+                st.warning(f"You are about to delete case {selected_case} and all its associated data. This action cannot be undone.")
+                confirm_delete = st.checkbox("I understand and wish to proceed.")
+                if st.button("Delete"):
+                    if confirm_delete:
+                        if delete_case(selected_case):
+                            st.success(f"Case {selected_case} deleted successfully.")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to delete case {selected_case}.")
+                    else:
+                        st.error("Please confirm deletion by checking the box.")
+
         st.write("---")
             
     return selected_case

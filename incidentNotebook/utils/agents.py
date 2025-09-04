@@ -26,7 +26,6 @@ class IOCExtractionState(TypedDict):
     result: dict[str, list[str]] | None
     database_dialect: str | None
 
-
 # ==================================
 # AGENT PROMPTS & LOGIC
 # ==================================
@@ -46,12 +45,12 @@ def host_ioc_agent(state: IOCExtractionState):
     messages = [
         {
             "role": "system",
-            "content": f"""You are a cybersecurity analyst and SQL expert. Extract ONLY **host-based** IOCs from the incident narrative and produce valid {dialect} (SQLite) INSERT statements for the `host_ioc` table.
+            "content": f"""You are a cybersecurity analyst and SQL expert. Extract ONLY **host-based** IOCs from the incident narrative and produce valid {dialect} INSERT statements for the `host_ioc` table.
 
             **CRITICAL: You MUST use the case_id '{case_id}' for all records.**
 
-            SQLITE_RULES:
-            - Dialect: SQLite.
+            SQL RULES:
+            - Dialect: {dialect}.
             - Always INSERT into the specified table only. Do not emit any other SQL type.
             - Always include an explicit column list in INSERT.
             - **VERY IMPORTANT**: Ensure the number of values in the VALUES clause matches the number of columns in the INSERT INTO clause.
@@ -121,12 +120,12 @@ def network_ioc_agent(state: IOCExtractionState):
     messages = [
         {
             "role": "system",
-            "content": f"""You are a cybersecurity analyst and SQL expert. Extract ONLY **network-based** IOCs from the incident narrative and produce valid {dialect} (SQLite) INSERT statements for the `network_ioc` table.
+            "content": f"""You are a cybersecurity analyst and SQL expert. Extract ONLY **network-based** IOCs from the incident narrative and produce valid {dialect} INSERT statements for the `network_ioc` table.
 
                 **CRITICAL: You MUST use the case_id '{case_id}' for all records.**
 
-                SQLITE_RULES:
-                - Dialect: SQLite.
+                SQL RULES:
+                - Dialect: {dialect}
                 - Always INSERT into the specified table only. Do not emit any other SQL type.
                 - Always include an explicit column list in INSERT.
                 - **VERY IMPORTANT**: Strings must be single-quoted; escape internal quotes by doubling them (e.g., O'Brien -> 'O''Brien').
@@ -193,12 +192,12 @@ def timeline_ioc_agent(state: IOCExtractionState):
     messages = [
         {
             "role": "system",
-            "content": f"""You are a cybersecurity analyst and SQL expert. Extract **timeline events** (not raw IOCs) from the incident narrative and produce valid {dialect} (SQLite) INSERT statements for the `timeline` table.
+            "content": f"""You are a cybersecurity analyst and SQL expert. Extract **timeline events** (not raw IOCs) from the incident narrative and produce valid {dialect} INSERT statements for the `timeline` table.
 
                 **CRITICAL: You MUST use the case_id '{case_id}' for all records.**
 
-                SQLITE_RULES:
-                - Dialect: SQLite.
+                SQL_RULES:
+                - Dialect: {dialect}.
                 - Always INSERT into the specified table only. Do not emit any other SQL type.
                 - Always include an explicit column list in INSERT.
                 - **VERY IMPORTANT**: Ensure the number of values in the VALUES clause matches the number of columns in the INSERT INTO clause.

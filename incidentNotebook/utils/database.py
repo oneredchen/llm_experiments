@@ -246,6 +246,25 @@ def create_case(case_name: str) -> str:
         return case_id
 
 
+def delete_case(case_id: str) -> bool:
+    """
+    Delete a case and all its associated data.
+    """
+    init_db()
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as session:
+        case_to_delete = session.query(Case).filter(Case.case_id == case_id).first()
+        if case_to_delete:
+            session.delete(case_to_delete)
+            session.commit()
+            logger.info(f"Case {case_id} deleted successfully.")
+            return True
+        else:
+            logger.warning(f"Case {case_id} not found for deletion.")
+            return False
+
+
+
 def execute_insert_sql(sql_statement: str, table_name: str, params: Optional[dict] = None) -> bool:
     """
     Execute a raw INSERT (or other) SQL statement safely within a transaction.
