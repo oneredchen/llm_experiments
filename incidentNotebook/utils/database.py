@@ -5,7 +5,7 @@ import string
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Type
 
 import pandas as pd
 from sqlalchemy import (
@@ -92,6 +92,11 @@ class Case(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+    # Relationships
+    timeline_events = relationship("Timeline", back_populates="case", cascade="all, delete-orphan")
+    host_iocs = relationship("HostIOC", back_populates="case", cascade="all, delete-orphan")
+    network_iocs = relationship("NetworkIOC", back_populates="case", cascade="all, delete-orphan")
+
     def __repr__(self) -> str:  # pragma: no cover
         return f"<Case case_id={self.case_id} name={self.name!r} status={self.status}>"
 
@@ -116,7 +121,7 @@ class Timeline(Base):
     hash = Column(String(128))  # consider renaming to hash_value in a migration
     notes = Column(Text)  # multiline notes
 
-    case = relationship("Case", backref="timeline_events", passive_deletes=True)
+    case = relationship("Case", back_populates="timeline_events")
 
     __table_args__ = (
         Index("ix_timeline_case_ts", "case_id", "timestamp_utc"),
@@ -144,7 +149,7 @@ class HostIOC(Base):
     size_bytes = Column(Integer)
     notes = Column(Text)
 
-    case = relationship("Case", backref="host_iocs", passive_deletes=True)
+    case = relationship("Case", back_populates="host_iocs")
 
     __table_args__ = (
         Index("ix_hostioc_case_type", "case_id", "indicator_type"),
@@ -170,7 +175,7 @@ class NetworkIOC(Base):
     attack_alignment = Column(String(128))
     notes = Column(Text)
 
-    case = relationship("Case", backref="network_iocs", passive_deletes=True)
+    case = relationship("Case", back_populates="network_iocs")
 
     __table_args__ = (
         Index("ix_networkioc_case_type", "case_id", "indicator_type"),
@@ -180,6 +185,7 @@ class NetworkIOC(Base):
 # ----------------------------------------------------------------------------
 # Helpers
 # ----------------------------------------------------------------------------
+
 
 def generate_case_id(existing_ids) -> str:
     """Generate a unique human-readable case ID. Guard against rare collisions."""
@@ -194,6 +200,7 @@ def generate_case_id(existing_ids) -> str:
 # ----------------------------------------------------------------------------
 # Public API (kept for compatibility with the rest of your app)
 # ----------------------------------------------------------------------------
+
 
 def load_database() -> Dict[str, pd.DataFrame]:
     """
@@ -263,31 +270,40 @@ def delete_case(case_id: str) -> bool:
             logger.warning(f"Case {case_id} not found for deletion.")
             return False
 
-
-
-def execute_insert_sql(sql_statement: str, table_name: str, params: Optional[dict] = None) -> bool:
+def insert_iocs(ioc_objects: List[Dict], model_class: Type[Base]) -> bool:
     """
-    Execute a raw INSERT (or other) SQL statement safely within a transaction.
+    Insert a list of IOC objects into the database.
 
     Args:
-        sql_statement: The SQL text. Prefer parameter placeholders like :param.
-        table_name: For logging/validation only.
-        params: Optional parameter dictionary for bound parameters.
+        ioc_objects: A list of dictionaries representing the IOCs.
+        model_class: The SQLAlchemy model class to use for insertion.
 
     Returns:
-        True on success; False on error.
+        True on success, False on error.
     """
     init_db()
-    engine = get_engine()
-    try:
-        with engine.begin() as conn:
-            conn.execute(sa_text(sql_statement), params or {})
-        logger.debug("Executed SQL against '%s' successfully.", table_name)
-        return True
-    except Exception as e:
-        logger.error("Failed to execute SQL on '%s': %s\nSQL: %s", table_name, e, sql_statement)
-        return False
+    SessionLocal = get_sessionmaker()
+    with SessionLocal() as session:
+        try:
+            for ioc_data in ioc_objects:
+                db_ioc = model_class(**ioc_data)
+                session.add(db_ioc)
+            session.commit()
+            logger.info(f"Successfully inserted {len(ioc_objects)} records into {model_class.__tablename__}.")
+            return True
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to insert IOCs into {model_class.__tablename__}: {e}")
+            return False
 
+def insert_host_iocs(ioc_objects: List[Dict]) -> bool:
+    return insert_iocs(ioc_objects, HostIOC)
+
+def insert_network_iocs(ioc_objects: List[Dict]) -> bool:
+    return insert_iocs(ioc_objects, NetworkIOC)
+
+def insert_timeline_events(ioc_objects: List[Dict]) -> bool:
+    return insert_iocs(ioc_objects, Timeline)
 
 def get_database_dialect() -> str:
     """Return the engine dialect name (e.g., 'sqlite')."""

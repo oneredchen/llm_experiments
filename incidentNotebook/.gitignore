@@ -128,3 +128,5 @@ db/incident_notebook.db
 
 # OS-specific
 .DS_Store
+
+GEMINI.md
