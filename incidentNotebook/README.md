@@ -27,6 +27,7 @@ This approach allows an analyst to quickly move from unstructured notes to a str
     -   **Host-based IOCs**: File names, hashes, registry keys, etc.
     -   **Network-based IOCs**: IP addresses, domains, URLs, etc.
     -   **Timeline Events**: A chronological sequence of actions.
+-   **Automated Refinement**: Includes a review-and-refine loop where an evaluator agent assesses the extracted IOCs and provides feedback to the extractor, improving the quality of the final output.
 -   **Local First**: Runs entirely on your local machine, ensuring data privacy and security.
 -   **Simple UI**: Built with Streamlit for a clean and interactive user experience.
 -   **Extensible**: The agentic workflow, built with LangGraph, can be easily modified to support new IOC types or extraction logic.
@@ -95,7 +96,7 @@ Follow these steps to get the application running on your local machine.
 ```
 ├── app.py                  # Main Streamlit application entry point
 ├── utils/
-│   ├── agents.py           # Core IOC extraction logic and LangGraph agent definitions
+│   ├── ioc_extraction_workflow.py # Core IOC extraction logic and LangGraph agent definitions
 │   └── database.py         # SQLAlchemy schema and database helper functions
 ├── cases/                  # Sample incident description text files
 ├── db/
@@ -107,6 +108,6 @@ Follow these steps to get the application running on your local machine.
 ## Development
 
 -   **Package Management**: All Python dependencies are managed with `uv` and defined in `pyproject.toml`.
--   **Agentic Workflow**: The core extraction logic is a stateful graph built with LangGraph. See `utils/agents.py` to understand the multi-agent system.
+-   **Agentic Workflow**: The core extraction logic is a stateful graph built with LangGraph. The workflow begins with a parallel triage process to check for host and network IOCs. Each extractor then enters a refinement loop where an evaluator agent reviews the output and provides feedback, allowing the extractor to improve the results over a maximum of three iterations. See `utils/ioc_extraction_workflow.py` to understand the multi-agent system.
 -   **Database**: The schema is defined in `utils/database.py`. Any changes to the database models should be made there.
 -   **Logging**: The application uses the standard Python `logging` module. Logs are output to the console and to `incident_notebook.log`.

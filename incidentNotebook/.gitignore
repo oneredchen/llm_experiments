@@ -124,7 +124,7 @@ logs/
 *.log
 
 # Database
-db/incident_notebook.db
+db/
 
 # OS-specific
 .DS_Store

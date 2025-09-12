@@ -3,6 +3,7 @@ from typing_extensions import TypedDict
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 import logging
+import uuid
 
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
@@ -358,6 +359,8 @@ def host_ioc_agent(state: IOCExtractionState):
     ]
 
     response = llm.with_structured_output(HostIOCOutputList).invoke(messages)
+    for ioc in response.iocs:
+        ioc.indicator_id = f"H-{uuid.uuid4()}"
     logger.info(f"Host IOC agent completed. Found {len(response.iocs)} objects.")
     return {"host_ioc_objects": response.iocs, "host_retry_count": retry_count + 1}
 
@@ -391,7 +394,7 @@ def evaluate_host_iocs(state: IOCExtractionState):
 
             Extracted IOCs:
             {iocs_str}
-            """
+            """,
         },
     ]
     response = llm.invoke(messages)
@@ -453,6 +456,8 @@ def network_ioc_agent(state: IOCExtractionState):
     ]
 
     response = llm.with_structured_output(NetworkIOCOutputList).invoke(messages)
+    for ioc in response.iocs:
+        ioc.indicator_id = f"N-{uuid.uuid4()}"
     logger.info(f"Network IOC agent completed. Found {len(response.iocs)} objects.")
     return {"network_ioc_objects": response.iocs, "network_retry_count": retry_count + 1}
 
@@ -486,7 +491,7 @@ def evaluate_network_iocs(state: IOCExtractionState):
 
             Extracted IOCs:
             {iocs_str}
-            """
+            """,
         },
     ]
     response = llm.invoke(messages)
@@ -578,7 +583,7 @@ def evaluate_timeline_iocs(state: IOCExtractionState):
 
             Extracted IOCs:
             {iocs_str}
-            """
+            """,
         },
     ]
     response = llm.invoke(messages)
