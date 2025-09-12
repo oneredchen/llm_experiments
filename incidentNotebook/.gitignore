@@ -130,3 +130,4 @@ db/incident_notebook.db
 .DS_Store
 
 GEMINI.md
+agentic_workflow.ipynb

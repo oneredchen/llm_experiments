@@ -13,13 +13,6 @@ from .database import get_database_dialect
 
 logger = logging.getLogger(__name__)
 
-
-class SQLStatementList(BaseModel):
-    sql_statements: List[str] = Field(
-        ..., description="A list of valid SQL statements, each as a string."
-    )
-
-
 class TimelineOutputFormat(BaseModel):
     submitted_by: Annotated[
         str,
