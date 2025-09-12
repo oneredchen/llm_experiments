@@ -3,7 +3,7 @@ import pandas as pd
 import ollama
 import logging
 from logging_config import setup_logging
-from utils.agents import ioc_extraction_agent_workflow
+from utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
 from utils.database import (
     load_database,
     create_case,
