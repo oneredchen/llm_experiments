@@ -241,6 +241,7 @@ dependencies = [
     { name = "langchain-ollama" },
     { name = "langgraph" },
     { name = "pandas" },
+    { name = "python-dotenv" },
     { name = "python-json-logger" },
     { name = "pyyaml" },
     { name = "sqlalchemy" },
@@ -253,6 +254,7 @@ requires-dist = [
     { name = "langchain-ollama", specifier = ">=0.3.3" },
     { name = "langgraph", specifier = ">=0.4.5" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "python-dotenv", specifier = ">=1.2.0" },
     { name = "python-json-logger", specifier = ">=2.0.7" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
@@ -873,6 +875,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892 },
+]
+
+[[package]]
+name = "python-dotenv"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/28/11/8b54f93cfa36d85cff2b52b3e8e7068a45cb995cd7732a6ac12221c686ff/python_dotenv-1.2.0.tar.gz", hash = "sha256:285503127438c87e67735623884bef7bf67d696422237a197530e2d9f7009986", size = 43431 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/26/4689baa3a3cb3262e2f0ec5f9df43aca6ede51e6bf982db7c80f12ca2527/python_dotenv-1.2.0-py3-none-any.whl", hash = "sha256:26010671bc0310b579dc981d8ae69047138bfdfc224df80211b196e5716150db", size = 21012 },
 ]
 
 [[package]]

@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import ollama
 import logging
+import os
+from dotenv import load_dotenv
 from logging_config import setup_logging
 from utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
 from utils.database import (
@@ -12,6 +14,10 @@ from utils.database import (
     insert_network_iocs,
     insert_timeline_events,
 )
+
+# Load .env file
+load_dotenv()
+ollama_host = os.getenv("OLLAMA_HOST")
 
 
 def setup_page():
@@ -84,7 +90,7 @@ def render_main_content(databases, selected_case):
 
     col1, col2 = st.columns(2)
     with col1:
-        client = ollama.Client(host="http://192.168.50.21:11434")
+        client = ollama.Client(host=ollama_host)
         list_of_models = client.list()["models"]
         model_names = [model["model"] for model in list_of_models]
         llm_model = st.selectbox(
