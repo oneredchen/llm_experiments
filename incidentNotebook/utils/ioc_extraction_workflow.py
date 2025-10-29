@@ -14,6 +14,7 @@ from .database import get_database_dialect
 
 logger = logging.getLogger(__name__)
 
+
 class TimelineOutputFormat(BaseModel):
     submitted_by: Annotated[
         str,
@@ -243,13 +244,13 @@ def triage_host_iocs(state: IOCExtractionState):
     messages = [
         {
             "role": "system",
-            "content": '''You are a cybersecurity analyst triage expert. Your task is to determine if the provided incident description contains any potential **host-based** Indicators of Compromise (IOCs).
+            "content": """You are a cybersecurity analyst triage expert. Your task is to determine if the provided incident description contains any potential **host-based** Indicators of Compromise (IOCs).
 
             Respond with a single word:
             - 'continue' if host-based IOCs (files, processes, registry keys, etc.) are likely present.
             - 'skip' if the description contains ONLY network IOCs (IPs, domains) or no IOCs at all.
 
-            Do not provide any explanation or other text.'''
+            Do not provide any explanation or other text.""",
         },
         {"role": "user", "content": last_message.content},
     ]
@@ -259,6 +260,7 @@ def triage_host_iocs(state: IOCExtractionState):
     logger.info(f"Host-based IOC triage decision: '{decision}'")
     return {"host_ioc_decision": decision}
 
+
 def decide_host_ioc_path(state: IOCExtractionState):
     """
     Reads the triage decision from the state and returns the next node.
@@ -266,12 +268,15 @@ def decide_host_ioc_path(state: IOCExtractionState):
     if "continue" in state.get("host_ioc_decision", "skip"):
         return "host_ioc_extractor"
     return "skip_host_ioc_extraction"
+
+
 def skip_host_ioc_extraction(state: IOCExtractionState):
     """
     No-op node that skips host IOC extraction.
     """
     logger.info("Skipping host IOC extraction as per triage decision.")
     return {"host_ioc_objects": []}
+
 
 def triage_network_iocs(state: IOCExtractionState):
     """
@@ -283,13 +288,13 @@ def triage_network_iocs(state: IOCExtractionState):
     messages = [
         {
             "role": "system",
-            "content": '''You are a cybersecurity analyst triage expert. Your task is to determine if the provided incident description contains any potential **network-based** Indicators of Compromise (IOCs).
+            "content": """You are a cybersecurity analyst triage expert. Your task is to determine if the provided incident description contains any potential **network-based** Indicators of Compromise (IOCs).
 
             Respond with a single word:
             - 'continue' if network-based IOCs (IPs, domains, URLs, etc.) are likely present.
             - 'skip' if the description contains ONLY host-based IOCs or no IOCs at all.
 
-            Do not provide any explanation or other text.'''
+            Do not provide any explanation or other text.""",
         },
         {"role": "user", "content": last_message.content},
     ]
@@ -299,6 +304,7 @@ def triage_network_iocs(state: IOCExtractionState):
     logger.info(f"Network-based IOC triage decision: '{decision}'")
     return {"network_ioc_decision": decision}
 
+
 def decide_network_ioc_path(state: IOCExtractionState):
     """
     Reads the triage decision from the state and returns the next node.
@@ -306,12 +312,15 @@ def decide_network_ioc_path(state: IOCExtractionState):
     if "continue" in state.get("network_ioc_decision", "skip"):
         return "network_ioc_extractor"
     return "skip_network_ioc_extraction"
+
+
 def skip_network_ioc_extraction(state: IOCExtractionState):
     """
     No-op node that skips network IOC extraction.
     """
     logger.info("Skipping network IOC extraction as per triage decision.")
     return {"network_ioc_objects": []}
+
 
 def host_ioc_agent(state: IOCExtractionState):
     """
@@ -323,7 +332,7 @@ def host_ioc_agent(state: IOCExtractionState):
     feedback = state.get("host_ioc_feedback")
     retry_count = state.get("host_retry_count", 0)
 
-    system_prompt = f"""You are a cybersecurity analyst. Extract ONLY **host-based** IOCs from the incident narrative and produce a list of JSON objects conforming to the HostIOCOutputFormat.
+    system_prompt = """You are a cybersecurity analyst. Extract ONLY **host-based** IOCs from the incident narrative and produce a list of JSON objects conforming to the HostIOCOutputFormat.
 
         HOST_IOC_SCOPE (allowed):
         - Files, processes, services, drivers, DLLs, local executables
@@ -364,6 +373,7 @@ def host_ioc_agent(state: IOCExtractionState):
     logger.info(f"Host IOC agent completed. Found {len(response.iocs)} objects.")
     return {"host_ioc_objects": response.iocs, "host_retry_count": retry_count + 1}
 
+
 def evaluate_host_iocs(state: IOCExtractionState):
     """
     Evaluates the extracted host IOCs and provides feedback.
@@ -402,6 +412,7 @@ def evaluate_host_iocs(state: IOCExtractionState):
     logger.info(f"Host IOC evaluation result: '{evaluation}'")
     return {"host_ioc_feedback": evaluation}
 
+
 def decide_host_loop(state: IOCExtractionState):
     """
     Decides whether to re-run the host IOC extractor.
@@ -411,6 +422,7 @@ def decide_host_loop(state: IOCExtractionState):
     if feedback and feedback != "perfect" and feedback != "no_iocs" and retry_count < 3:
         return "host_ioc_extractor"
     return "timeline_ioc_extractor"
+
 
 def network_ioc_agent(state: IOCExtractionState):
     """
@@ -422,7 +434,7 @@ def network_ioc_agent(state: IOCExtractionState):
     feedback = state.get("network_ioc_feedback")
     retry_count = state.get("network_retry_count", 0)
 
-    system_prompt = f"""You are a cybersecurity analyst. Extract ONLY **network-based** IOCs from the incident narrative and produce a list of JSON objects conforming to the NetworkIOCOutputFormat.
+    system_prompt = """You are a cybersecurity analyst. Extract ONLY **network-based** IOCs from the incident narrative and produce a list of JSON objects conforming to the NetworkIOCOutputFormat.
 
         NETWORK_IOC_SCOPE (allowed):
         - IP addresses (v4/v6), domains, FQDNs, URLs/URIs
@@ -459,7 +471,11 @@ def network_ioc_agent(state: IOCExtractionState):
     for ioc in response.iocs:
         ioc.indicator_id = f"N-{uuid.uuid4()}"
     logger.info(f"Network IOC agent completed. Found {len(response.iocs)} objects.")
-    return {"network_ioc_objects": response.iocs, "network_retry_count": retry_count + 1}
+    return {
+        "network_ioc_objects": response.iocs,
+        "network_retry_count": retry_count + 1,
+    }
+
 
 def evaluate_network_iocs(state: IOCExtractionState):
     """
@@ -499,6 +515,7 @@ def evaluate_network_iocs(state: IOCExtractionState):
     logger.info(f"Network IOC evaluation result: '{evaluation}'")
     return {"network_ioc_feedback": evaluation}
 
+
 def decide_network_loop(state: IOCExtractionState):
     """
     Decides whether to re-run the network IOC extractor.
@@ -509,6 +526,7 @@ def decide_network_loop(state: IOCExtractionState):
         return "network_ioc_extractor"
     return "timeline_ioc_extractor"
 
+
 def timeline_ioc_agent(state: IOCExtractionState):
     """Agent for extracting timeline-based IOCs as a list of structured objects."""
     logger.info("Timeline IOC agent started.")
@@ -517,7 +535,7 @@ def timeline_ioc_agent(state: IOCExtractionState):
     feedback = state.get("timeline_feedback")
     retry_count = state.get("timeline_retry_count", 0)
 
-    system_prompt = f"""You are a cybersecurity analyst. Extract **timeline events** (not raw IOCs) from the incident narrative and produce a list of JSON objects conforming to the TimelineOutputFormat.
+    system_prompt = """You are a cybersecurity analyst. Extract **timeline events** (not raw IOCs) from the incident narrative and produce a list of JSON objects conforming to the TimelineOutputFormat.
 
         TIMELINE_SCOPE (include):
         - Discrete activities with timestamps or clear temporal ordering
@@ -552,6 +570,7 @@ def timeline_ioc_agent(state: IOCExtractionState):
     response = llm.with_structured_output(TimelineOutputList).invoke(messages)
     logger.info(f"Timeline IOC agent completed. Found {len(response.iocs)} objects.")
     return {"timeline_objects": response.iocs, "timeline_retry_count": retry_count + 1}
+
 
 def evaluate_timeline_iocs(state: IOCExtractionState):
     """
@@ -591,6 +610,7 @@ def evaluate_timeline_iocs(state: IOCExtractionState):
     logger.info(f"Timeline IOC evaluation result: '{evaluation}'")
     return {"timeline_feedback": evaluation}
 
+
 def decide_timeline_loop(state: IOCExtractionState):
     """
     Decides whether to re-run the timeline IOC extractor.
@@ -600,6 +620,7 @@ def decide_timeline_loop(state: IOCExtractionState):
     if feedback and feedback != "perfect" and feedback != "no_iocs" and retry_count < 3:
         return "timeline_ioc_extractor"
     return "ioc_result_aggregator"
+
 
 def ioc_result_aggregator(state: IOCExtractionState):
     """Aggregates the results from the IOC extraction agents."""
@@ -711,20 +732,26 @@ def ioc_extraction_graph_builder():
 
 
 def ioc_extraction_agent_workflow(
-    llm_model: str, case_id: str, incident_description: str
+    llm_model: str,
+    case_id: str,
+    incident_description: str,
+    ollama_host: str | None = None,
 ):
     """Workflow for IOC extraction agent."""
     logger.info(f"Starting IOC extraction workflow for case: {case_id}")
     logger.debug(f"LLM Model: {llm_model}")
     logger.debug(f"Incident Description: {incident_description}")
 
-    llm = ChatOllama(
-        base_url="http://192.168.50.21:11434",
-        model=llm_model,
-        temperature=0.2,  # Lower temperature for more deterministic output
-        num_predict=-2,
-        num_ctx=8192,
-    )
+    llm_params = {
+        "model": llm_model,
+        "temperature": 0.2,  # Lower temperature for more deterministic output
+        "num_predict": -2,
+        "num_ctx": 8192,
+    }
+    if ollama_host:
+        llm_params["base_url"] = ollama_host
+
+    llm = ChatOllama(**llm_params)
     initial_message = {
         "role": "user",
         "content": f"Incident Description: {incident_description}",

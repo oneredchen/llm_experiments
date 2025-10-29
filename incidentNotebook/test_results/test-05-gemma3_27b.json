@@ -1,0 +1,51 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "File Server Logs",
+            "status": "Confirmed",
+            "indicator_id": "H-50a297fb-2373-4d6a-afd3-799bac9bd257",
+            "indicator_type": "file",
+            "indicator": "sensitive project folder",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Large amount of data accessed and copied from this folder. Indicates potential data exfiltration."
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "File Server Logs",
+            "status": "Confirmed",
+            "indicator_id": "H-98e23866-d40c-4809-8633-91135802ad8f",
+            "indicator_type": "file",
+            "indicator": "external USB drive",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Data was copied to an external USB drive, suggesting an attempt to remove data from the network."
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "File Server Logs",
+            "status": "Confirmed",
+            "indicator_id": "H-6e7aa2eb-07b7-477a-8a31-1486f3985f84",
+            "indicator_type": "file",
+            "indicator": "EMP-WS-007",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Workstation used to access and copy data. May contain residual data or malware."
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": []
+}

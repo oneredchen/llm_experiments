@@ -1,0 +1,76 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-fc1b713c-caef-495f-918d-9f88324a4547",
+            "indicator_type": "process",
+            "indicator": "cryptolocker.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Ransomware process identified as CryptoLocker variant"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-27fa25cc-9b25-4d88-88b0-f17092c741a7",
+            "indicator_type": "file",
+            "indicator": "cryptolocker.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Ransomware executable found on infected systems"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "Internal Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-be92937f-60c8-4057-966e-ac93cb60881d",
+            "indicator_type": "domain",
+            "indicator": "c2.dark-web-domain.onion",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Ransomware variant of CryptoLocker family, communicating with Tor hidden service"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Internal Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-25fdf03c-1ebe-4a08-83b5-8aa59ec8c26d",
+            "indicator_type": "url",
+            "indicator": "c2.dark-web-domain.onion",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Ransomware variant of CryptoLocker family, communicating with Tor hidden service"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Internal Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-f4123713-883d-4e9a-b733-8f965637a44b",
+            "indicator_type": "ja3",
+            "indicator": "unknown (not provided)",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": "Ransomware process 'cryptolocker.exe' communicating with C2 server"
+        }
+    ],
+    "timeline_objects": []
+}

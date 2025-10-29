@@ -1,0 +1,32 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "User Report",
+            "status": "New",
+            "indicator_id": "N-83f3f941-5565-472e-a18e-85cdb5619992",
+            "indicator_type": "domain",
+            "indicator": "evil.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1566.001",
+            "notes": "Sender's email domain identified as malicious. Associated with phishing campaign."
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "User Report",
+            "status": "New",
+            "indicator_id": "N-5586a2cc-426b-42fe-bd85-81f2e76a993e",
+            "indicator_type": "url",
+            "indicator": "http://fake-login-page.com/update-credentials",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1566.002",
+            "notes": "Malicious URL discovered in phishing email. Leads to a fake login page."
+        }
+    ],
+    "timeline_objects": []
+}

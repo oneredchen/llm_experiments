@@ -1,0 +1,50 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "incident_report",
+            "status": "Confirmed",
+            "indicator_id": "H-1b042dd1-2d0e-47bb-9a18-32602374fba4",
+            "indicator_type": "process",
+            "indicator": "cryptolocker.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Ransomware process identified as 'cryptolocker.exe' in the incident. This is a new variant of CryptoLocker family. Process name observed in memory and task manager during incident response. No associated file path provided in incident description. Process name matches ransomware note filename pattern but no specific path confirmed. No hashes available for this process name in incident report. Process was terminated during incident response without further artifact collection. Note: Process name alone is used as IOC due to lack of path/hashes in report, but typically would require full path for definitive identification. (Truncated to 800 chars: 298 chars used)."
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "internal",
+            "source": "incident_report",
+            "status": "active",
+            "indicator_id": "N-6cafdc63-e5b7-453d-9f52-3050a48f16be",
+            "indicator_type": "domain",
+            "indicator": "c2.dark-web-domain.onion",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1071",
+            "notes": "C2 server for new CryptoLocker variant ransomware, observed on August 22, 2025. Tor hidden service address used for command and control communication."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T08:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Users began reporting inability to access files",
+            "evidence_source": "User Reports",
+            "details_comments": null,
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Multiple users from various departments reported file access issues on August 22, 2025 morning. Ransomware note 'Your Files Have Been Encrypted!' displayed on desktops."
+        }
+    ]
+}

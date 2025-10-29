@@ -1,0 +1,32 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Researcher",
+            "source": "Cloud Infrastructure",
+            "status": "Indicated",
+            "indicator_id": "N-fd98cec2-f574-4018-a5fa-ec4cd2f6a09c",
+            "indicator_type": "domain",
+            "indicator": "example-company-data.s3.amazonaws.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1588.002 (Exfiltration Over Command and Control Channel)",
+            "notes": "Publicly accessible S3 bucket containing sensitive company data"
+        },
+        {
+            "submitted_by": "Security Researcher",
+            "source": "Cloud Infrastructure",
+            "status": "Indicated",
+            "indicator_id": "N-321de118-faa7-43e7-baa4-f696e07b12e3",
+            "indicator_type": "url",
+            "indicator": "https://example-company-data.s3.amazonaws.com/",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1588.002 (Exfiltration Over Command and Control Channel)",
+            "notes": "Publicly accessible S3 bucket containing sensitive company data"
+        }
+    ],
+    "timeline_objects": []
+}

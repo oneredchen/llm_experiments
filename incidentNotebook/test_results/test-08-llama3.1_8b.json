@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-ffd5086e-ef1f-417a-9e3a-8cd15bbe9f89",
+            "indicator_type": "domain",
+            "indicator": "free-wifi.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1568.002 - Dynamic Resolution Protocol (DRP)",
+            "notes": "Rogue access point set up on corporate guest network"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-c51010ae-0356-4f2f-a6bf-93467667e7d1",
+            "indicator_type": "ip",
+            "indicator": "192.168.1.100",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1568.002 - Dynamic Resolution Protocol (DRP)",
+            "notes": "IP address of rogue access point"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-f1a3f428-9a11-4a52-987a-26b2570a4440",
+            "indicator_type": "ja3",
+            "indicator": "0x1234567890abcdef",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1568.002 - Dynamic Resolution Protocol (DRP)",
+            "notes": "JA3 fingerprint of self-signed SSL certificate"
+        }
+    ],
+    "timeline_objects": []
+}

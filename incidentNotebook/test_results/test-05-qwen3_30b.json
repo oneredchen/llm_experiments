@@ -1,0 +1,20 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2023-08-22T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Routine audit of file server logs",
+            "evidence_source": "File Server Logs",
+            "details_comments": "Audit revealed unusual data access and copy activity from sensitive project folder to external USB drive",
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

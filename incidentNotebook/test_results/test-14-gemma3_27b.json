@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-20a7fa49-0863-4219-bb32-2fbcafa055da",
+            "indicator_type": "domain",
+            "indicator": "shop.example.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "Compromised e-commerce website."
+        },
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-b9c4e590-b03e-45fb-a880-f0c9e659cb73",
+            "indicator_type": "url",
+            "indicator": "pastebin.com/raw/12345678",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1071",
+            "notes": "URL where stolen data sample was posted."
+        },
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-2ad20e31-45d9-43f4-8b9c-01946c3ba337",
+            "indicator_type": "ip",
+            "indicator": "203.0.113.78",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1071",
+            "notes": "Attacker's IP address, part of a botnet."
+        }
+    ],
+    "timeline_objects": []
+}

@@ -1,0 +1,20 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "security researcher",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "discovery of publicly accessible S3 bucket",
+            "evidence_source": "researcher report",
+            "details_comments": "Publicly accessible S3 bucket 'example-company-data' containing sensitive data (customer records, financial documents, PII, source code) discovered by security researcher.",
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

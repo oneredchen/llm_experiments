@@ -1,0 +1,89 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "security_team",
+            "source": "internal_incident",
+            "status": "active",
+            "indicator_id": "N-e16ba44b-dd55-479d-a5ca-89b2901c0557",
+            "indicator_type": "fqdn",
+            "indicator": "shop.example.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": null,
+            "notes": "Victim domain where SQL injection vulnerability was exploited in login page; initial access vector for data breach."
+        },
+        {
+            "submitted_by": "security_team",
+            "source": "internal_incident",
+            "status": "active",
+            "indicator_id": "N-82fb7c04-8dcc-42b8-93cf-8c797b45423b",
+            "indicator_type": "ip",
+            "indicator": "203.0.113.78",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1071",
+            "notes": "Attacker IP traced from data breach; identified as botnet node used for command and control during exfiltration."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity_analyst",
+            "status_tag": "Confirmed",
+            "system_name": "shop.example.com",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "SQL injection exploitation",
+            "evidence_source": "Web server logs",
+            "details_comments": null,
+            "attack_alignment": "T1195",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Exploited SQL injection vulnerability in login page using sqlmap to bypass authentication"
+        },
+        {
+            "submitted_by": "cybersecurity_analyst",
+            "status_tag": "Confirmed",
+            "system_name": "shop.example.com",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Database exfiltration",
+            "evidence_source": "Network traffic logs",
+            "details_comments": null,
+            "attack_alignment": "T1041",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Exfiltrated customer database containing personal and financial information"
+        },
+        {
+            "submitted_by": "cybersecurity_analyst",
+            "status_tag": "Confirmed",
+            "system_name": "pastebin.com",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Public data disclosure",
+            "evidence_source": "Pastebin archive",
+            "details_comments": null,
+            "attack_alignment": "T1041",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Posted sample of stolen data on public pastebin site (pastebin.com/raw/12345678)"
+        },
+        {
+            "submitted_by": "cybersecurity_analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Attacker source attribution",
+            "evidence_source": "Firewall logs",
+            "details_comments": null,
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Traced attack to IP address 203.0.113.78, identified as part of botnet"
+        }
+    ]
+}

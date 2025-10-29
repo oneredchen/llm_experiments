@@ -1,0 +1,34 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Suspicious",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "User attempted to access legitimate e-commerce site",
+            "evidence_source": "User report",
+            "details_comments": "User reported redirection to fake login page on August 22, 2025. Did not enter credentials.",
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "security_team",
+            "status_tag": "Confirmed",
+            "system_name": "Corporate Guest Network",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Security team discovered man-in-the-middle attack",
+            "evidence_source": "Network investigation",
+            "details_comments": "Attacker used rogue AP (SSID: Free-WiFi) with self-signed SSL to intercept traffic on guest network.",
+            "attack_alignment": "TA0011 (Command and Control)",
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

@@ -1,0 +1,35 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "H-360a83dc-9fba-46f5-bc2b-01528812eb54",
+            "indicator_type": "file",
+            "indicator": "SuperUtil",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious software update for SuperUtil version 1.2.3 contained a backdoor. This is the primary vector of compromise."
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "EDR Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-2c562984-ef63-4f86-b7d0-d46c1065d4e4",
+            "indicator_type": "ip",
+            "indicator": "unknown IP address",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1041",
+            "notes": "Data exfiltration detected to an unknown IP address. Requires further investigation to determine the specific IP."
+        }
+    ],
+    "timeline_objects": []
+}

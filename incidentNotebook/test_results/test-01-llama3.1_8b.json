@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "User Report",
+            "source": "Email",
+            "status": "Potential Threat",
+            "indicator_id": "N-fc8f6417-e5c2-4d62-b470-b475d7e6f9d3",
+            "indicator_type": "url",
+            "indicator": "http://fake-login-page.com/update-credentials",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Suspicious email with malicious link to fake login page"
+        },
+        {
+            "submitted_by": "User Report",
+            "source": "Email",
+            "status": "Potential Threat",
+            "indicator_id": "N-534096f7-7b05-4912-ad66-4773d5ba97b8",
+            "indicator_type": "domain",
+            "indicator": "fake-login-page.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Domain associated with suspicious email"
+        },
+        {
+            "submitted_by": "User Report",
+            "source": "Email",
+            "status": "Potential Threat",
+            "indicator_id": "N-b8c25b5d-7932-4d40-aa71-404e4e6441ab",
+            "indicator_type": "domain",
+            "indicator": "evil.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Domain associated with suspicious email"
+        }
+    ],
+    "timeline_objects": []
+}

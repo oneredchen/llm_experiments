@@ -1,0 +1,34 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "internal",
+            "source": "internal",
+            "status": "active",
+            "indicator_id": "N-c1f12c10-0650-423c-81d5-6f982381336c",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.100",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1071",
+            "notes": "C2 server for Gh0st RAT variant, port 8080"
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2023-08-23T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Watering hole attack discovery",
+            "evidence_source": "Security team",
+            "details_comments": null,
+            "attack_alignment": "Initial Access",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Security team uncovered watering hole attack targeting employees via compromised third-party website. Attack exploited vulnerable Adobe Flash Player to install Gh0st RAT variant, which connected to C2 at 1.2.3.4:8080 (replaced reserved address 192.0.2.100 per RFC 5737)."
+        }
+    ]
+}

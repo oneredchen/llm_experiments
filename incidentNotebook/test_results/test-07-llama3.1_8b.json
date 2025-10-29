@@ -1,0 +1,78 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-6dc2c8f0-5896-4b15-bd4c-56ee8592cd43",
+            "indicator_type": "process",
+            "indicator": "infected-pc-01$malware_process",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious process detected on infected-pc-01"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-a205ae63-b6da-4279-a286-c15edefc6573",
+            "indicator_type": "registry",
+            "indicator": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\malware",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious registry key detected on infected-pc-01"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-e35e6e54-8baa-4699-b248-f65add7e6b29",
+            "indicator_type": "file",
+            "indicator": "C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\malware.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1024000,
+            "notes": "Malicious file detected on infected-pc-01"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Analyst",
+            "source": "Network Traffic Analysis",
+            "status": "Confirmed",
+            "indicator_id": "N-d2930622-8bd6-47f2-a295-8ef22184a2a5",
+            "indicator_type": "domain",
+            "indicator": "data-exfil.bad-actor.net",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Excessive DNS Lookups",
+            "notes": "DNS tunneling detected, data exfiltration via compromised host 'infected-pc-01'."
+        },
+        {
+            "submitted_by": "Security Analyst",
+            "source": "Network Traffic Analysis",
+            "status": "Confirmed",
+            "indicator_id": "N-244a4060-c6a9-4af1-8781-800cb37ffe38",
+            "indicator_type": "ip",
+            "indicator": "192.168.1.100",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": "Infected host 'infected-pc-01' IP address."
+        }
+    ],
+    "timeline_objects": []
+}

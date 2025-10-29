@@ -1,0 +1,65 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-71ca2381-66e0-47e9-b9de-b078942da4d7",
+            "indicator_type": "process",
+            "indicator": "Gh0st RAT",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Detected variant of Gh0st RAT installed via watering hole attack. Provides complete control over infected machine. Further analysis needed to determine persistence mechanisms and lateral movement techniques."
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-ee552368-bd3c-4782-bfed-8528fbea001a",
+            "indicator_type": "file",
+            "indicator": "malicious script",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious script injected into third-party website. Used to check for vulnerable Adobe Flash Player version and install RAT."
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-2e50db04-0f06-4c0f-9a47-ee1e599201af",
+            "indicator_type": "file",
+            "indicator": "Adobe Flash Player (vulnerable version)",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Vulnerable version of Adobe Flash Player exploited by malicious script. Specific version details need to be identified."
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-bf6fd00d-5986-4196-b161-093ff360e3ad",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.100",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1071.001",
+            "notes": "C2 server for Gh0st RAT. Observed connection on TCP port 8080."
+        }
+    ],
+    "timeline_objects": []
+}

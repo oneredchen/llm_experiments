@@ -1,0 +1,71 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "IDS",
+            "source": "Network Alert",
+            "status": "New",
+            "indicator_id": "N-8ce42d3a-6893-48d1-98da-d751fe0850a3",
+            "indicator_type": "ip",
+            "indicator": "203.0.113.55",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T03:45:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "External IP address conducting a port scan and SQL injection attempts."
+        },
+        {
+            "submitted_by": "IDS",
+            "source": "Network Alert",
+            "status": "New",
+            "indicator_id": "N-548a9d24-39fe-41b2-8d0d-f622025dbf52",
+            "indicator_type": "ip",
+            "indicator": "198.51.100.10",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T03:45:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "Public-facing web server targeted by port scan and SQL injection attempts."
+        },
+        {
+            "submitted_by": "IDS",
+            "source": "Network Alert",
+            "status": "New",
+            "indicator_id": "N-3bf818ce-1f9d-4fca-b3cf-8256e5d61def",
+            "indicator_type": "port",
+            "indicator": "80",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T03:45:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "TCP port targeted during port scan."
+        },
+        {
+            "submitted_by": "IDS",
+            "source": "Network Alert",
+            "status": "New",
+            "indicator_id": "N-12933151-ee2b-4bc5-958b-90ee4a974d17",
+            "indicator_type": "port",
+            "indicator": "443",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T03:45:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "TCP port targeted during port scan."
+        },
+        {
+            "submitted_by": "IDS",
+            "source": "Network Alert",
+            "status": "New",
+            "indicator_id": "N-9591e709-05a7-401e-a13b-4348ae170967",
+            "indicator_type": "port",
+            "indicator": "22",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T03:45:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "TCP port targeted during port scan."
+        }
+    ],
+    "timeline_objects": []
+}

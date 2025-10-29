@@ -1,0 +1,36 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-9a72a748-360f-42e1-bdf5-b696faf17d42",
+            "indicator_type": "file",
+            "indicator": "adware-installer.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malware file identified as adware-installer.exe. Displays intrusive pop-up advertisements and redirects browser traffic."
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "TaskScheduler",
+            "status": "Confirmed",
+            "indicator_id": "H-770a6758-d231-4f87-8bd2-e81404139879",
+            "indicator_type": "scheduled_task",
+            "indicator": "adware-installer.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Scheduled task created to execute adware-installer.exe upon user login, ensuring persistence."
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": []
+}

@@ -1,0 +1,32 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-c089dc1f-7cb9-4145-9b4a-2a73cc49b452",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.200",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1057: Domain Name System (DNS) Resolution",
+            "notes": "C2 server used to launch DDoS attack"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-40584473-f2c6-4226-9132-4589ecc3faeb",
+            "indicator_type": "domain",
+            "indicator": "example.com",
+            "initial_lead": "Initial lead from network logs",
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": null
+        }
+    ],
+    "timeline_objects": []
+}

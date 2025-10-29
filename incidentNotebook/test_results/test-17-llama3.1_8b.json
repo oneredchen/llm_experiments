@@ -1,0 +1,80 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-5102585d-bb92-4e6d-a7d7-8f0c92c56394",
+            "indicator_type": "process",
+            "indicator": "cryptojacking_malware.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1048576,
+            "notes": "Cryptojacking malware process detected on production web servers"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-e138b22e-540a-46db-b70d-7c6735613da7",
+            "indicator_type": "file",
+            "indicator": "C:\\Program Files\\cryptojacking_malware.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1048576,
+            "notes": "Cryptojacking malware executable found on production web servers"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-91ec35cf-ff04-467f-a517-4cb789da3fc9",
+            "indicator_type": "registry",
+            "indicator": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\cryptojacking_malware",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Registry key created by cryptojacking malware"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-5cc6d8cf-d70d-42ca-8f0f-85158e979061",
+            "indicator_type": "scheduled_task",
+            "indicator": "Task: \\{C9F3E2D5-7A4B-43EA-B8D1-6F0D3F4C3F5D} \\cryptojacking_malware.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Scheduled task created by cryptojacking malware"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-a3fc3be4-8be2-437a-8900-3edcc076a844",
+            "indicator_type": "url",
+            "indicator": "http://cryptominer.com/script.js",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "TA0002 - T1587",
+            "notes": "Malicious script injected into third-party JavaScript library"
+        }
+    ],
+    "timeline_objects": []
+}

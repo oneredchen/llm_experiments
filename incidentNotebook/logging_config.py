@@ -2,13 +2,17 @@ import logging
 import sys
 from pythonjsonlogger import jsonlogger
 
-def setup_logging():
+def setup_logging(log_filename="incident_notebook.log"):
     """Set up logging for the application."""
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
+    # Remove all handlers associated with the root logger object.
+    for handler in logger.handlers[:]:
+        logger.removeHandler(handler)
+
     # Create a file handler for JSON logs
-    log_handler = logging.FileHandler("logs/incident_notebook.log")
+    log_handler = logging.FileHandler(f"logs/{log_filename}")
     formatter = jsonlogger.JsonFormatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     log_handler.setFormatter(formatter)
 

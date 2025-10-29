@@ -1,0 +1,78 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-e9c6cb3d-2408-4f0a-9b4e-a19c6e331ab3",
+            "indicator_type": "file",
+            "indicator": "SuperUtil.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1048576,
+            "notes": "Malicious software update installed on company systems"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-c8b4b70f-50bc-4b75-a8c2-d1c8126230ba",
+            "indicator_type": "process",
+            "indicator": "SuperUtil.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1048576,
+            "notes": "Malicious process running on company systems"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-4659cbb6-58c1-44a4-9297-4d3b67816b52",
+            "indicator_type": "registry",
+            "indicator": "HKLM\\SOFTWARE\\SuperUtil",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Registry key created by malicious software update"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Internal Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-2793a85c-2407-475c-b8a5-1fcb3f2ad9f3",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.1",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190: Exploit Public-Facing Application",
+            "notes": "Unknown IP address used for data exfiltration"
+        },
+        {
+            "submitted_by": "Internal Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-eed21a1e-409d-46da-9a4a-39da7a6a1344",
+            "indicator_type": "url",
+            "indicator": "https://example.com/backdoor",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T14:30:00+00:00",
+            "attack_alignment": "T1210: Exploit Vulnerability",
+            "notes": "Malicious URL used for backdoor communication"
+        }
+    ],
+    "timeline_objects": []
+}

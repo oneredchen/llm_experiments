@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Email Header",
+            "status": "Confirmed",
+            "indicator_id": "N-1ebd3547-7785-4a14-8af2-3c3748278a1b",
+            "indicator_type": "url",
+            "indicator": "http://your-company-portal.com/reset-password",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Look-alike domain designed to mimic company's password reset portal"
+        },
+        {
+            "submitted_by": "Analyst",
+            "source": "Email Header",
+            "status": "Confirmed",
+            "indicator_id": "N-e3df8894-ef49-4aaa-9326-40c61029f975",
+            "indicator_type": "ip",
+            "indicator": "10.1.1.15",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "IP address used by attacker to log into employee's email account"
+        },
+        {
+            "submitted_by": "Analyst",
+            "source": "Email Header",
+            "status": "Confirmed",
+            "indicator_id": "N-dd25d31e-debe-4681-8fdb-176e1388914d",
+            "indicator_type": "domain",
+            "indicator": "exfil-data@protonmail.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "External email address used by attacker to exfiltrate data"
+        }
+    ],
+    "timeline_objects": []
+}

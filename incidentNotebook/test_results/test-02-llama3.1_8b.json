@@ -1,0 +1,109 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-5b6453e1-f0c8-4fad-b89a-7a8a7af1a08a",
+            "indicator_type": "file",
+            "indicator": "setup.zip",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious file downloaded from public website"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-20c24ea6-b9f6-4d09-b529-04229e3cc8df",
+            "indicator_type": "file",
+            "indicator": "installer.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Executable dropped by malicious installer"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-48a273a0-6e5b-4ffe-a06c-72848538cd20",
+            "indicator_type": "file",
+            "indicator": "malicious.dll",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malware variant used to steal data"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-16d31316-0bfb-4ebe-97e2-0442623e89b0",
+            "indicator_type": "registry",
+            "indicator": "C:\\Windows\\System32\\malicious.dll",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malware DLL dropped in system directory"
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "Employee in Sales Department",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T14:30:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "File download from public file-sharing website",
+            "evidence_source": "User report",
+            "details_comments": null,
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "Employee in Sales Department",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T14:30:05+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Execution of installer.exe",
+            "evidence_source": "Process creation",
+            "details_comments": null,
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "Employee in Sales Department",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T14:30:10+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Dropping of malicious.dll into C:\\Windows\\System32 directory",
+            "evidence_source": "File system modification",
+            "details_comments": null,
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

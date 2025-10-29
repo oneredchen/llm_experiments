@@ -1,0 +1,79 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst",
+            "source": "incident_report",
+            "status": "Confirmed",
+            "indicator_id": "H-5eba42b5-8f75-447a-961d-2f4076709658",
+            "indicator_type": "file",
+            "indicator": "installer.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Installer executable dropped from malicious zip. SHA256 hash provided: 123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz"
+        },
+        {
+            "submitted_by": "analyst",
+            "source": "incident_report",
+            "status": "Confirmed",
+            "indicator_id": "H-5e5797fb-ef8f-4143-b657-6aa9fb8e26b1",
+            "indicator_type": "file",
+            "indicator": "malicious.dll",
+            "full_path": "C:\\Windows\\System32\\malicious.dll",
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious DLL dropped in System32 directory. Known malware variant for data theft."
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Creation Time",
+            "activity": "File download",
+            "evidence_source": "Employee report",
+            "details_comments": "Employee downloaded 'setup.zip' from public file-sharing website. File contained 'installer.exe' with SHA256 hash '123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz'.",
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Malicious executable execution",
+            "evidence_source": "Process monitoring",
+            "details_comments": "Executed 'installer.exe' which appeared to do nothing but triggered background actions. No user interaction observed during execution.",
+            "attack_alignment": "T1195",
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Creation Time",
+            "activity": "Malicious DLL drop",
+            "evidence_source": "File system monitoring",
+            "details_comments": "Dropped 'malicious.dll' into 'C:\\Windows\\System32' directory. DLL is known malware variant for data theft.",
+            "attack_alignment": "T1562.001",
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

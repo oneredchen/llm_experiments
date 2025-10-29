@@ -1,0 +1,35 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "H-b6cb27bc-95b7-4eac-9980-ccf90e81bc87",
+            "indicator_type": "file",
+            "indicator": "cryptolocker.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Ransomware executable identified as a new variant of CryptoLocker."
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-6ce58db5-d5c3-445a-ac8f-f16a685c9d08",
+            "indicator_type": "fqdn",
+            "indicator": "c2.dark-web-domain.onion",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1071.001",
+            "notes": "Command and control server identified in incident report."
+        }
+    ],
+    "timeline_objects": []
+}

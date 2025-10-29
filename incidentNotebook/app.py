@@ -117,7 +117,10 @@ def render_main_content(databases, selected_case):
         if st.session_state.get("ioc_extracted"):
             st.session_state.ioc_extracted = False
             run_ioc_extraction(
-                llm_model, selected_case, st.session_state.incident_description
+                llm_model,
+                selected_case,
+                st.session_state.incident_description,
+                ollama_host,
             )
 
         st.subheader("Indicators of Compromise")
@@ -225,7 +228,7 @@ def render_data_tabs(databases):
         st.dataframe(network_ioc_df, use_container_width=True, hide_index=True)
 
 
-def run_ioc_extraction(llm_model, selected_case, incident_description):
+def run_ioc_extraction(llm__model, selected_case, incident_description, ollama_host):
     progress_bar = st.progress(0, text="Initializing IOC extraction...")
 
     with st.spinner("Extracting IOCs..."):
@@ -233,6 +236,7 @@ def run_ioc_extraction(llm_model, selected_case, incident_description):
             llm_model=llm_model,
             case_id=selected_case,
             incident_description=incident_description,
+            ollama_host=ollama_host,
         )
 
         host_iocs = result.get("host_ioc_objects", [])

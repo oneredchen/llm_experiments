@@ -1,0 +1,123 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-4b6c05c2-4a1b-43bc-a1eb-fb2aa4f6d06f",
+            "indicator_type": "registry",
+            "indicator": "HKCU\\Software\\Macromedia\\FlashPlayer\\AllowScriptAccess",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-8e75896b-7b3d-4c2f-a27b-57eb3476a82c",
+            "indicator_type": "registry",
+            "indicator": "HKCU\\Software\\Macromedia\\FlashPlayer\\AllowScriptAccess",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-19b4a681-c3bb-45b0-bac7-2f49db38a1a1",
+            "indicator_type": "file",
+            "indicator": "\\Windows\\Temp\\flash_player.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1048576,
+            "notes": "Malicious Adobe Flash Player executable"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-6338c8f7-f638-416c-af5f-87af2275eb15",
+            "indicator_type": "process",
+            "indicator": "\\Windows\\Temp\\flash_player.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malicious process executing on infected machine"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-444604c6-32fc-464c-8d8b-1dc66c909dd4",
+            "indicator_type": "driver",
+            "indicator": "\\Windows\\System32\\drivers\\netio.sys",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "RAT driver installed on infected machine"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-45ca7ff7-3bc5-4e9a-8b20-998ad87745bc",
+            "indicator_type": "scheduled_task",
+            "indicator": "\\Windows\\Tasks\\netio.sys",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "RAT scheduled task created on infected machine"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Internal Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-3aa7383e-f460-4bc3-bf97-9c84f5243adf",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.100",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T14:30:00+00:00",
+            "attack_alignment": "TA0002 (Lateral Movement)",
+            "notes": "IP address of C2 server; RAT variant Gh0st"
+        },
+        {
+            "submitted_by": "Internal Security Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-2c10d104-bb58-4a0d-9ad1-093975210457",
+            "indicator_type": "port",
+            "indicator": "8080",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T14:30:00+00:00",
+            "attack_alignment": "TA0002 (Lateral Movement)",
+            "notes": "TCP port used by RAT for C2 communication"
+        }
+    ],
+    "timeline_objects": []
+}

@@ -1,0 +1,75 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "Phishing Email",
+            "status": "New",
+            "indicator_id": "N-c27d11a6-50e4-452b-849d-c4ac24d01de4",
+            "indicator_type": "domain",
+            "indicator": "evil.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "Phishing",
+            "notes": "Domain used in phishing email."
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "Phishing Email",
+            "status": "New",
+            "indicator_id": "N-45f6e542-bcb3-4f1d-8048-962776a39a22",
+            "indicator_type": "url",
+            "indicator": "http://fake-login-page.com/update-credentials",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "Phishing",
+            "notes": "URL from phishing email attempting to mimic company login page."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "user@company.com",
+            "status_tag": "Suspicious",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Received suspicious email",
+            "evidence_source": "Email client logs",
+            "details_comments": null,
+            "attack_alignment": "Phishing",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "User in marketing department received an email with subject 'Urgent Account Verification Required' from 'badguy@evil.com'. The email contained a link to a fake login page."
+        },
+        {
+            "submitted_by": "user@company.com",
+            "status_tag": "Suspicious",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Reported suspicious email",
+            "evidence_source": "Email client logs, Security team report",
+            "details_comments": null,
+            "attack_alignment": "Phishing",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "User reported the suspicious email to the security team after noticing discrepancies in the sender's address and content."
+        },
+        {
+            "submitted_by": "security_team@company.com",
+            "status_tag": "Suspicious",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Escalated to Security Team",
+            "evidence_source": "Security team internal logs, Email client logs",
+            "details_comments": null,
+            "attack_alignment": "Phishing",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "The security team escalated the incident internally for further investigation and potential mitigation steps."
+        }
+    ]
+}

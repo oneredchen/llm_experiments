@@ -1,0 +1,34 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Software update installation",
+            "evidence_source": "Internal logs",
+            "details_comments": "Malicious software update 'SuperUtil' version '1.2.3' installed on company systems",
+            "attack_alignment": "Initial Access",
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T23:59:59+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Data exfiltration detection",
+            "evidence_source": "Security monitoring",
+            "details_comments": "Security team detected large data exfiltration to unknown IP address",
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

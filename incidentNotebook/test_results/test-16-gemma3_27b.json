@@ -1,0 +1,62 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "Security Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "example-company-data",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Publicly accessible S3 bucket discovered",
+            "evidence_source": "Security Researcher",
+            "details_comments": null,
+            "attack_alignment": "Initial Access",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Researcher discovered misconfigured S3 bucket 'example-company-data' allowing public access to sensitive data."
+        },
+        {
+            "submitted_by": "Security Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "example-company-data",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Data exposure began",
+            "evidence_source": "Incident Report",
+            "details_comments": null,
+            "attack_alignment": "Data Exfiltration",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Sensitive data, including customer records, financial documents, PII, and source code, was exposed due to the misconfigured S3 bucket."
+        },
+        {
+            "submitted_by": "Security Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Data downloaded by researcher",
+            "evidence_source": "Incident Report",
+            "details_comments": null,
+            "attack_alignment": "Reconnaissance",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Researcher downloaded a sample of the data to verify the contents."
+        },
+        {
+            "submitted_by": "Security Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "example-company-data",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "S3 bucket secured",
+            "evidence_source": "Incident Report",
+            "details_comments": null,
+            "attack_alignment": "Remediation",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Security team secured the S3 bucket within minutes of receiving the report."
+        }
+    ]
+}

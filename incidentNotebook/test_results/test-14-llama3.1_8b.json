@@ -1,0 +1,32 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Incident Response Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-39bb1764-eee0-4e4f-8142-0f94e5a4d35d",
+            "indicator_type": "ip",
+            "indicator": "203.0.113.78",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "IP address associated with botnet activity and data breach"
+        },
+        {
+            "submitted_by": "Incident Response Team",
+            "source": "Network Logs",
+            "status": "Confirmed",
+            "indicator_id": "N-414de2be-142e-47cd-b155-450d938dd81e",
+            "indicator_type": "domain",
+            "indicator": "pastebin.com/raw/12345678",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1092 - Data Encrypted for Impact",
+            "notes": "Public pastebin site used to exfiltrate and threaten to release stolen data"
+        }
+    ],
+    "timeline_objects": []
+}

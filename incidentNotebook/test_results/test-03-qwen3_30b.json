@@ -1,0 +1,34 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "IDS",
+            "source": "Network IDS",
+            "status": "alerted",
+            "indicator_id": "N-6f1fb64c-bbb5-4ded-b170-df200d31a9b0",
+            "indicator_type": "ip",
+            "indicator": "203.0.113.55",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": "Port scan and SQL injection attempts from 203.0.113.55 targeting web server 198.51.100.10 on 2025-08-22 at 03:45 (approx)."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T03:45:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Port scan",
+            "evidence_source": "IDS",
+            "details_comments": null,
+            "attack_alignment": "Reconnaissance",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "External IP 203.0.113.55 conducting port scan against web server 198.51.100.10 targeting ports 80,443,22"
+        }
+    ]
+}

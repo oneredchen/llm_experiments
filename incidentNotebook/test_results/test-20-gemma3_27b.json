@@ -1,0 +1,19 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-0aa1a446-9c3c-4ad7-9d80-9290a423ed37",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.200",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1071.001",
+            "notes": "C2 server used in DDoS attack."
+        }
+    ],
+    "timeline_objects": []
+}

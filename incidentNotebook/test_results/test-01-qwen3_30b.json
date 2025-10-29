@@ -1,0 +1,47 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "user_report",
+            "source": "phishing_email",
+            "status": "active",
+            "indicator_id": "N-889292c9-63c9-4cb2-81e6-ab98c3c40b0a",
+            "indicator_type": "domain",
+            "indicator": "fake-login-page.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1566",
+            "notes": "Domain used in phishing campaign to host fake login page for credential harvesting."
+        },
+        {
+            "submitted_by": "user_report",
+            "source": "phishing_email",
+            "status": "active",
+            "indicator_id": "N-702e88dc-54fb-4b32-8ac9-a2d4de7be9ff",
+            "indicator_type": "url",
+            "indicator": "http://fake-login-page.com/update-credentials",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1566",
+            "notes": "Full URL used in phishing email. Path '/update-credentials' leads to fake login page."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Suspicious",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Phishing email received",
+            "evidence_source": "User Report",
+            "details_comments": "User in marketing department received phishing email with malicious link 'http://fake-login-page.com/update-credentials' from spoofed IT address 'badguy@evil.com'. User reported without entering credentials. Evidence: User Report.",
+            "attack_alignment": "T1566",
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

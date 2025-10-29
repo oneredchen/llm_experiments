@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Investigation Team",
+            "source": "Network Logs",
+            "status": "Potential Indicator of Compromise",
+            "indicator_id": "N-95371d07-0844-4699-9147-1ec741038d2d",
+            "indicator_type": "domain",
+            "indicator": "example.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Domain associated with suspicious activity in network logs. Further investigation is required to confirm its role in the attack."
+        },
+        {
+            "submitted_by": "Investigation Team",
+            "source": "Network Logs",
+            "status": "Potential Indicator of Compromise",
+            "indicator_id": "N-d20072a7-69f7-4c5b-8adc-ed8711ad040a",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.1",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1071 - Application Layer Protocol: Web Service",
+            "notes": "IP address associated with suspicious activity in network logs. Further investigation is required to confirm its role in the attack."
+        },
+        {
+            "submitted_by": "Investigation Team",
+            "source": "Network Logs",
+            "status": "Potential Indicator of Compromise",
+            "indicator_id": "N-f3d4d32b-3225-4bff-9f14-7f7e2118cbf4",
+            "indicator_type": "url",
+            "indicator": "https://example.com/malware.exe",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "URL associated with suspicious activity in network logs. Further investigation is required to confirm its role in the attack."
+        }
+    ],
+    "timeline_objects": []
+}

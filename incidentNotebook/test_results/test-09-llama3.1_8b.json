@@ -1,0 +1,106 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-b50b849c-e455-4840-8319-d0d266b97c90",
+            "indicator_type": "process",
+            "indicator": "exploit.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1024,
+            "notes": "Zero-day exploit used to gain remote code execution on the server"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-3b8f630a-5c25-4eb0-a592-bd9685142f53",
+            "indicator_type": "file",
+            "indicator": "backdoor.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 2048,
+            "notes": "Persistent backdoor installed on the server"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-38c28419-e5b7-40cb-a3ef-5d9c7559c122",
+            "indicator_type": "registry",
+            "indicator": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\backdoor.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Backdoor added to registry to run at startup"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-d57e9fc1-0438-4b2a-b978-672b8dcd0d31",
+            "indicator_type": "scheduled_task",
+            "indicator": "Task: \\Microsoft\\Windows\\System32\\Tasks\\backdoor.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Scheduled task created to run backdoor at startup"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "source": "Internal Investigation",
+            "status": "Confirmed",
+            "indicator_id": "N-b5dd32b0-eb95-4037-a6bb-5fc2f7876db9",
+            "indicator_type": "ip",
+            "indicator": "192.168.1.100",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": "IP address of compromised email server"
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "source": "Internal Investigation",
+            "status": "Confirmed",
+            "indicator_id": "N-407252b4-f1bc-4eab-8599-5e4ca115d925",
+            "indicator_type": "domain",
+            "indicator": "example.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": "Domain used by attackers for C2"
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "source": "Internal Investigation",
+            "status": "Confirmed",
+            "indicator_id": "N-4699475f-dfab-4c0c-a6eb-2dd973f3b337",
+            "indicator_type": "url",
+            "indicator": "https://example.com/backdoor.cgi",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": null,
+            "notes": "URL used by attackers for backdoor communication"
+        }
+    ],
+    "timeline_objects": []
+}

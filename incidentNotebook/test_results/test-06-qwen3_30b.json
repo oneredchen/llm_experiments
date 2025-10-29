@@ -1,0 +1,36 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "FIM",
+            "status": "Confirmed",
+            "indicator_id": "H-f016c799-c283-4798-b2dd-6968498d9748",
+            "indicator_type": "file",
+            "indicator": "shell.php",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Web shell file uploaded to web server, detected by file integrity monitoring system; filename matches attacker's web shell artifact from incident description. Full path not specified in narrative, so set to NULL per requirements. No hashes provided for this file artifact. Only host-based file IOC extracted from narrative as other elements (domains, network artifacts) are out of scope. User account 'hacker' not representable in required IOC types (no registry path/file path provided for user artifact)."
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "security_team",
+            "status_tag": "Confirmed",
+            "system_name": "www.example.com",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Unauthorized file system change detected by FIM",
+            "evidence_source": "File Integrity Monitoring",
+            "details_comments": null,
+            "attack_alignment": "T1059",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Detected change included web shell upload and user account creation; confirmed via investigation"
+        }
+    ]
+}

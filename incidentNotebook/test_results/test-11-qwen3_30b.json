@@ -1,0 +1,103 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "incident_report",
+            "source": "phishing_campaign",
+            "status": "detected",
+            "indicator_id": "N-9c6a4ed2-675f-409a-8308-52d916b80f5f",
+            "indicator_type": "url",
+            "indicator": "http://your-company-portal.com/reset-password",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1566",
+            "notes": "Look-alike domain used in phishing campaign to harvest credentials. Mimics company's legitimate password reset portal."
+        },
+        {
+            "submitted_by": "incident_report",
+            "source": "phishing_campaign",
+            "status": "detected",
+            "indicator_id": "N-ae309d86-fa01-429d-953b-eb92812ba1aa",
+            "indicator_type": "ip",
+            "indicator": "10.1.1.15",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": null,
+            "notes": "Attacker's IP address used to log into compromised email account and send additional phishing emails."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "your-company-portal.com",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Phishing page accessed",
+            "evidence_source": "User report",
+            "details_comments": null,
+            "attack_alignment": "T1566",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Employee entered credentials on phishing page at 'your-company-portal.com/reset-password' after clicking malicious link in spear-phishing email"
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "your-company-portal.com",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Credential harvesting",
+            "evidence_source": "Phishing page logs",
+            "details_comments": null,
+            "attack_alignment": "T1566",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker harvested valid credentials from phishing page hosted at 'your-company-portal.com'"
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "your-company-portal.com",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Account compromise",
+            "evidence_source": "Email server logs",
+            "details_comments": null,
+            "attack_alignment": "T1566",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker used harvested credentials to log into employee email account from IP 10.1.1.15"
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Additional phishing",
+            "evidence_source": "Email server logs",
+            "details_comments": null,
+            "attack_alignment": "T1566",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker sent phishing emails to finance department employees from compromised account"
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Data exfiltration setup",
+            "evidence_source": "Email server logs",
+            "details_comments": null,
+            "attack_alignment": "T1021",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker created email forwarding rule to 'exfil-data@protonmail.com' to exfiltrate communications"
+        }
+    ]
+}

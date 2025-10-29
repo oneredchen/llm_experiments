@@ -1,0 +1,34 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Internal Security Team",
+            "source": "Internal Incident Report",
+            "status": "malicious",
+            "indicator_id": "N-5225e61d-c3c2-454f-a22e-eddddcf3790b",
+            "indicator_type": "url",
+            "indicator": "http://cryptominer.com/script.js",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1195",
+            "notes": "Malicious URL used to deliver cryptojacking malware via compromised third-party JavaScript library. The URL was served from 'http://cryptominer.com/script.js' and was responsible for downloading the malware on our servers. The incident was detected on 2025-08-23."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Production_Web_Servers",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Cryptojacking malware execution detected",
+            "evidence_source": "IT Operations Monitoring",
+            "details_comments": null,
+            "attack_alignment": "T1195",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Malware introduced via compromised third-party JavaScript library (http://cryptominer.com/script.js), causing sustained high CPU usage on production web servers. Security team confirmed cryptojacking activity on August 23, 2025."
+        }
+    ]
+}

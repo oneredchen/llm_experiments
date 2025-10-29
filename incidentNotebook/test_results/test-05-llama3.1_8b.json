@@ -1,0 +1,51 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-12c0dc91-4892-4ecb-8a86-978b634a8e35",
+            "indicator_type": "process",
+            "indicator": "C:\\Users\\disgruntled_employee\\Downloads\\USB Drive.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-109099e5-ede1-496e-b754-a28efce18625",
+            "indicator_type": "file",
+            "indicator": "C:\\Users\\disgruntled_employee\\Downloads\\Sensitive Project Data.zip",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": null
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-6cab437b-cc60-43e8-9123-0548b50163bf",
+            "indicator_type": "process",
+            "indicator": "C:\\Windows\\System32\\svchost.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": null
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": []
+}

@@ -1,0 +1,48 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2024-01-01T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Initial compromise via spear-phishing campaign targeting high-level executives.",
+            "evidence_source": "Investigation Findings",
+            "details_comments": null,
+            "attack_alignment": "Initial Access",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attackers targeted high-level executives with a spear-phishing campaign. This is believed to be the initial intrusion vector."
+        },
+        {
+            "submitted_by": "Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2024-01-01T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Lateral movement throughout the network using stolen credentials.",
+            "evidence_source": "Investigation Findings",
+            "details_comments": null,
+            "attack_alignment": "Lateral Movement",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attackers used stolen credentials to move laterally within the network."
+        },
+        {
+            "submitted_by": "Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2024-01-01T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Data exfiltration of sensitive data.",
+            "evidence_source": "Investigation Findings",
+            "details_comments": null,
+            "attack_alignment": "Exfiltration",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attackers exfiltrated a large amount of sensitive data."
+        }
+    ]
+}

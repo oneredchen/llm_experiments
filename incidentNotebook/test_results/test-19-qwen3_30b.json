@@ -1,0 +1,76 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Suspicious",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Vishing call impersonating IT help desk",
+            "evidence_source": "Employee report",
+            "details_comments": null,
+            "attack_alignment": "T1562.001",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker spoofed internal help desk number to initiate voice phishing attempt"
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Accounting-Workstation",
+            "timestamp_utc": "2025-08-23T00:15:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Credential disclosure via fake password reset page",
+            "evidence_source": "Employee report",
+            "details_comments": null,
+            "attack_alignment": "T1562.001",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Employee entered current and new password on attacker-controlled site"
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Accounting-Workstation",
+            "timestamp_utc": "2025-08-23T00:20:00+00:00",
+            "timestamp_type": "Execution Time",
+            "activity": "Account compromise using stolen credentials",
+            "evidence_source": "Security team investigation",
+            "details_comments": null,
+            "attack_alignment": "T1199",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker logged into employee account to access financial data"
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Suspicious",
+            "system_name": "Accounting-Workstation",
+            "timestamp_utc": "2025-08-23T00:18:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "RAT installation attempt during vishing call",
+            "evidence_source": "Employee report",
+            "details_comments": null,
+            "attack_alignment": "T1562.001",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attacker requested employee to install remote access tool before call was terminated"
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Security-Team-Workstation",
+            "timestamp_utc": "2025-08-23T00:30:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "Incident reporting to security team",
+            "evidence_source": "Employee report",
+            "details_comments": null,
+            "attack_alignment": null,
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Employee reported vishing attempt after becoming suspicious of RAT request"
+        }
+    ]
+}

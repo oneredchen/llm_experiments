@@ -1,0 +1,48 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Analyst",
+            "source": "Network Traffic Analysis",
+            "status": "Confirmed",
+            "indicator_id": "N-9b9463d9-811a-41f4-82f6-4ea8cffb92cc",
+            "indicator_type": "domain",
+            "indicator": "data-exfil.bad-actor.net",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1071.001",
+            "notes": "Suspicious domain observed with high volume of DNS queries, indicative of data exfiltration via DNS tunneling."
+        }
+    ],
+    "timeline_objects": [
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "infected-pc-01",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "High volume of suspicious DNS queries detected",
+            "evidence_source": "Network Traffic Analysis",
+            "details_comments": null,
+            "attack_alignment": "Exfiltration",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Detected unusually high volume of DNS queries to 'data-exfil.bad-actor.net'. Indicates potential data exfiltration activity."
+        },
+        {
+            "submitted_by": "Cybersecurity Analyst",
+            "status_tag": "Confirmed",
+            "system_name": "infected-pc-01",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Data exfiltration via DNS tunneling",
+            "evidence_source": "Network Traffic Analysis",
+            "details_comments": null,
+            "attack_alignment": "Exfiltration",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Confirmed data exfiltration using DNS tunneling technique. Data encoded within DNS queries to attacker-controlled domain 'data-exfil.bad-actor.net'."
+        }
+    ]
+}

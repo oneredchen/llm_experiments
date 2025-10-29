@@ -1,0 +1,20 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Discovery Time",
+            "activity": "BEC fraud discovery",
+            "evidence_source": "Internal investigation",
+            "details_comments": null,
+            "attack_alignment": "Phishing",
+            "size_bytes": null,
+            "hash": null,
+            "notes": null
+        }
+    ]
+}

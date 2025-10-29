@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-327afc95-f6b3-49bf-9567-30d830730b7a",
+            "indicator_type": "domain",
+            "indicator": "your-company-portal.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1566.001",
+            "notes": "Look-alike domain used in spear-phishing campaign to harvest credentials."
+        },
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-59c27f2d-cf52-4135-b034-9fe0d497f457",
+            "indicator_type": "ip",
+            "indicator": "10.1.1.15",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1078.002",
+            "notes": "IP address used to access compromised email account."
+        },
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-adcca114-5bfb-49e6-a0bd-299171cf1441",
+            "indicator_type": "domain",
+            "indicator": "protonmail.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1074",
+            "notes": "External email domain used for data exfiltration via email forwarding."
+        }
+    ],
+    "timeline_objects": []
+}

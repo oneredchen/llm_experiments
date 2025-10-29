@@ -1,0 +1,106 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-126994db-7686-4f94-a01f-93ae2330e784",
+            "indicator_type": "file",
+            "indicator": "shell.php",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1234,
+            "notes": "Web shell uploaded to web server by attacker"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-d81aee7b-22e5-4aa0-b690-955fd28f1a36",
+            "indicator_type": "process",
+            "indicator": "shell.php",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": 1234,
+            "notes": "Web shell executed on web server"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-054709ea-9fd5-48a5-9d3f-7e93ae048123",
+            "indicator_type": "registry",
+            "indicator": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon\\SpecialAccounts\\UserList",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "New user account created by attacker"
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-ea825492-5b7b-47e0-9b9f-ff7982ebe7e8",
+            "indicator_type": "service",
+            "indicator": "hacker",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Attacker escalated privileges to root"
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Security Team",
+            "source": "File Integrity Monitoring System",
+            "status": "Confirmed",
+            "indicator_id": "N-8d44bb86-ad9a-4ce7-a4e6-f5a0f2b20a61",
+            "indicator_type": "domain",
+            "indicator": "www.example.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1055.003 - Web Shell",
+            "notes": "Unauthorized change to web server's file system detected on August 22, 2025"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "File Integrity Monitoring System",
+            "status": "Confirmed",
+            "indicator_id": "N-cde43979-556f-4004-ba38-0c1cab3d31cb",
+            "indicator_type": "url",
+            "indicator": "/shell.php",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1055.003 - Web Shell",
+            "notes": "Web shell uploaded to server on August 22, 2025"
+        },
+        {
+            "submitted_by": "Security Team",
+            "source": "File Integrity Monitoring System",
+            "status": "Confirmed",
+            "indicator_id": "N-1925feb8-a2e8-4d26-afd8-c85ecff1ddf6",
+            "indicator_type": "ip",
+            "indicator": "192.0.2.1",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1055.003 - Web Shell",
+            "notes": "IP address of attacker's C2 server"
+        }
+    ],
+    "timeline_objects": []
+}

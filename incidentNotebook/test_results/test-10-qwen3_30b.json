@@ -1,0 +1,20 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity_analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2023-01-01T00:00:00+00:00",
+            "timestamp_type": "Creation Time",
+            "activity": "Spear-phishing email delivery",
+            "evidence_source": "Email logs",
+            "details_comments": null,
+            "attack_alignment": "TA0001",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Initial access vector targeting executives via spear-phishing campaign. Confirmed through email header analysis and user reports."
+        }
+    ]
+}

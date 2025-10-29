@@ -1,0 +1,50 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "analyst1",
+            "source": "File Integrity Monitoring",
+            "status": "Confirmed",
+            "indicator_id": "H-73a7fc81-a4d5-4456-9734-ab1e999e1fda",
+            "indicator_type": "file",
+            "indicator": "shell.php",
+            "full_path": "/var/www/html/shell.php",
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Web shell uploaded by attacker to gain command execution."
+        },
+        {
+            "submitted_by": "analyst1",
+            "source": "Sysmon",
+            "status": "Confirmed",
+            "indicator_id": "H-86a1e570-a09a-4387-9ec1-97b82eebbcdf",
+            "indicator_type": "file",
+            "indicator": "hacker",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "New user account created by attacker for privilege escalation."
+        }
+    ],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "FIM",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-b1cdf04c-0bae-4f81-803f-811dbeb1a025",
+            "indicator_type": "domain",
+            "indicator": "www.example.com",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-22T00:00:00+00:00",
+            "attack_alignment": "T1190",
+            "notes": "Compromised web server domain. Initial access via web application exploitation."
+        }
+    ],
+    "timeline_objects": []
+}

@@ -1,0 +1,48 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Zero-day exploit targeting email server",
+            "evidence_source": "Incident narrative",
+            "details_comments": null,
+            "attack_alignment": "TA0002",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Exploit leveraged vulnerability in enterprise email server software for remote code execution with system privileges"
+        },
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Backdoor installation on email server",
+            "evidence_source": "Incident narrative",
+            "details_comments": null,
+            "attack_alignment": "TA0003",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Persistent backdoor installed after gaining remote code execution to maintain network access"
+        },
+        {
+            "submitted_by": "cybersecurity analyst",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-22T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Lateral movement and data exfiltration",
+            "evidence_source": "Incident narrative",
+            "details_comments": null,
+            "attack_alignment": "TA0008",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Attackers moved laterally across network and exfiltrated sensitive data"
+        }
+    ]
+}

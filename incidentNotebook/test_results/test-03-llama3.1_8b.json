@@ -1,0 +1,45 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "IDS",
+            "source": "Network Traffic",
+            "status": "Potential Intrusion",
+            "indicator_id": "N-facf7fd0-768a-4b2c-8912-d9ffe744822d",
+            "indicator_type": "ip",
+            "indicator": "203.0.113.55",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Port scan and SQL injection attempts against public-facing web server"
+        },
+        {
+            "submitted_by": "IDS",
+            "source": "Network Traffic",
+            "status": "Potential Intrusion",
+            "indicator_id": "N-26d254ee-a42f-4fb4-a0d3-b9c17b6f3b01",
+            "indicator_type": "ip",
+            "indicator": "198.51.100.10",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Target of port scan and SQL injection attempts"
+        },
+        {
+            "submitted_by": "IDS",
+            "source": "Network Traffic",
+            "status": "Potential Intrusion",
+            "indicator_id": "N-18975527-1bba-4474-b8e3-cd55f626c011",
+            "indicator_type": "port",
+            "indicator": "80, 443, 22",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": null,
+            "attack_alignment": "T1190 - Exploit Public-Facing Application",
+            "notes": "Targeted ports in port scan"
+        }
+    ],
+    "timeline_objects": []
+}

@@ -1,0 +1,19 @@
+{
+    "host_ioc_objects": [],
+    "network_ioc_objects": [
+        {
+            "submitted_by": "Analyst",
+            "source": "Incident Report",
+            "status": "Confirmed",
+            "indicator_id": "N-62f7177c-0349-4ee0-87a9-f503dcb0c84d",
+            "indicator_type": "url",
+            "indicator": "http://cryptominer.com/script.js",
+            "initial_lead": null,
+            "details_comments": null,
+            "earliest_evidence_utc": "2025-08-23T00:00:00+00:00",
+            "attack_alignment": "T1189",
+            "notes": "Malicious JavaScript file served from this URL was responsible for downloading and executing cryptojacking malware."
+        }
+    ],
+    "timeline_objects": []
+}

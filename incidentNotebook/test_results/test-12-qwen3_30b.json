@@ -1,0 +1,50 @@
+{
+    "host_ioc_objects": [
+        {
+            "submitted_by": "incident_response",
+            "source": "malware_analysis",
+            "status": "Confirmed",
+            "indicator_id": "H-45a1e729-b78c-408c-8bdf-802893deb4e3",
+            "indicator_type": "file",
+            "indicator": "adware-installer.exe",
+            "full_path": null,
+            "sha256": null,
+            "sha1": null,
+            "md5": null,
+            "type_purpose": null,
+            "size_bytes": null,
+            "notes": "Malware identified as 'adware-installer.exe' that displays intrusive pop-up ads, hijacks browser, and creates scheduled task for persistence. SHA256 hash provided in analysis report. No path information available in incident description. Scheduled task name not specified in narrative, so not included as IOC due to missing identifier. No other host artifacts mentioned in incident description beyond this file and scheduled task (which lacks name)."
+        }
+    ],
+    "network_ioc_objects": [],
+    "timeline_objects": [
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Malware execution via browser exploit",
+            "evidence_source": "User report",
+            "details_comments": null,
+            "attack_alignment": "T1190",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Browser zero-day exploit on compromised news site led to silent download and execution of 'adware-installer.exe'"
+        },
+        {
+            "submitted_by": "user",
+            "status_tag": "Confirmed",
+            "system_name": "Unknown",
+            "timestamp_utc": "2025-08-23T00:00:00+00:00",
+            "timestamp_type": "Event Time",
+            "activity": "Scheduled task creation for persistence",
+            "evidence_source": "Malware analysis",
+            "details_comments": null,
+            "attack_alignment": "T1053.005",
+            "size_bytes": null,
+            "hash": null,
+            "notes": "Malware created scheduled task to execute on user login for persistence"
+        }
+    ]
+}
