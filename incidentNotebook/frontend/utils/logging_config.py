@@ -12,7 +12,7 @@ def setup_logging(log_filename="incident_notebook.log"):
         logger.removeHandler(handler)
 
     # Create a file handler for JSON logs
-    log_handler = logging.FileHandler(f"logs/{log_filename}")
+    log_handler = logging.FileHandler(f"frontend/logs/frontend.log")
     formatter = jsonlogger.JsonFormatter("%(asctime)s %(name)s %(levelname)s %(message)s")
     log_handler.setFormatter(formatter)
 

@@ -2,6 +2,8 @@
 
 A web-based notebook for cybersecurity incident response that uses a local Large Language Model (LLM) to automatically extract and structure Indicators of Compromise (IOCs) from raw incident text.
 
+Now features a dual-architecture design with a **FastAPI backend** for programmatic access and a **Streamlit frontend** for interactive use.
+
 ## Table of Contents
 
 - [About The Project](#about-the-project)
@@ -11,6 +13,10 @@ A web-based notebook for cybersecurity incident response that uses a local Large
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
 - [Usage](#usage)
+  - [Running the Backend (API)](#running-the-backend-api)
+  - [Running the Frontend (UI)](#running-the-frontend-ui)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
 - [Project Structure](#project-structure)
 - [Development](#development)
 
@@ -29,11 +35,14 @@ This approach allows an analyst to quickly move from unstructured notes to a str
     -   **Timeline Events**: A chronological sequence of actions.
 -   **Automated Refinement**: Includes a review-and-refine loop where an evaluator agent assesses the extracted IOCs and provides feedback to the extractor, improving the quality of the final output.
 -   **Local First**: Runs entirely on your local machine, ensuring data privacy and security.
--   **Simple UI**: Built with Streamlit for a clean and interactive user experience.
+-   **Dual Interface**:
+    -   **REST API**: Built with FastAPI for integration with other tools.
+    -   **Web UI**: Built with Streamlit for a clean and interactive user experience.
 -   **Extensible**: The agentic workflow, built with LangGraph, can be easily modified to support new IOC types or extraction logic.
 
 ## Built With
 
+-   [FastAPI](https://fastapi.tiangolo.com/) - Backend Framework
 -   [Streamlit](https://streamlit.io/) - Frontend Framework
 -   [Langchain](https://www.langchain.com/) & [LangGraph](https://langchain-ai.github.io/langgraph/) - LLM Orchestration
 -   [Ollama](https://ollama.com/) - Local LLM Hosting
@@ -71,43 +80,73 @@ Follow these steps to get the application running on your local machine.
     ```
 
 2.  **Install Dependencies**:
-    -   `uv` will create a virtual environment and install all required packages from `pyproject.toml`.
+    -   `uv` will create a virtual environment and verify all required packages.
     -   ```bash
       uv sync
       ```
 
 ## Usage
 
-1.  **Run the Application**:
-    -   Execute the following command from the project root directory:
-    -   ```bash
-      uv run streamlit run app.py
-      ```
 
-2.  **Using the App**:
-    -   Open your web browser to the URL provided by Streamlit (usually `http://localhost:8501`).
-    -   Select an LLM model from the sidebar.
-    -   Choose a sample case or paste your own incident description into the text area.
-    -   Click "Extract IOCs" to begin the analysis.
-    -   The extracted IOCs will be displayed in the main panel and saved to the `incident_notebook.db` SQLite file in the `db/` directory.
+
+### Easy Start
+
+You can run both the backend and frontend with a single command:
+```bash
+./start_app.sh
+```
+
+### Running the Application (Backend API)
+
+The backend provides the core logic and database access.
+
+From the project root:
+```bash
+uv run uvicorn backend.main:app --port 8000 --reload
+```
+The API will be available at `http://localhost:8000`.
+
+
+
+## API Documentation
+
+-   **Swagger UI**: `http://localhost:8000/docs`
+-   **ReDoc**: `http://localhost:8000/redoc`
+
+### Key Endpoints
+
+-   `GET /cases`: List all incident cases.
+-   `POST /cases`: Create a new case.
+-   `POST /cases/{case_id}/extract`: Trigger the IOC extraction workflow for a case.
+-   `GET /cases/{case_id}/data`: Retrieve extracted IOCs and timeline events.
+
+## Testing
+
+To run the API verification script:
+```bash
+uv run python tests/test_api_refactor.py
+```
+
+To run the end-to-end workflow evaluation:
+```bash
+uv run python tests/test_workflow.py
+```
 
 ## Project Structure
 
 ```
-├── app.py                  # Main Streamlit application entry point
-├── utils/
-│   ├── ioc_extraction_workflow.py # Core IOC extraction logic and LangGraph agent definitions
-│   └── database.py         # SQLAlchemy schema and database helper functions
-├── cases/                  # Sample incident description text files
-├── db/
-│   └── incident_notebook.db # SQLite database file (created on first run)
-├── pyproject.toml          # Project metadata and dependencies for uv
-└── README.md               # This file
+├── backend/                # FastAPI application
+│   ├── main.py             # API entry point
+│   ├── models.py           # Pydantic data models
+│   └── routers/            # API endpoints
+├── frontend/               # Legacy Streamlit application
+├── tests/                  # Test scripts
+├── utils/                  # Shared logic & Database
+└── README.md               # Documentation
 ```
 
 ## Development
 
 -   **Package Management**: All Python dependencies are managed with `uv` and defined in `pyproject.toml`.
--   **Agentic Workflow**: The core extraction logic is a stateful graph built with LangGraph. The workflow begins with a parallel triage process to check for host and network IOCs. Each extractor then enters a refinement loop where an evaluator agent reviews the output and provides feedback, allowing the extractor to improve the results over a maximum of three iterations. See `utils/ioc_extraction_workflow.py` to understand the multi-agent system.
--   **Database**: The schema is defined in `utils/database.py`. Any changes to the database models should be made there.
--   **Logging**: The application uses the standard Python `logging` module. Logs are output to the console and to `incident_notebook.log`.
+-   **Agentic Workflow**: The core extraction logic is a stateful graph built with LangGraph. See `utils/ioc_extraction_workflow.py`.
+-   **Database**: The schema is defined in `utils/database.py`.

@@ -1,12 +1,16 @@
 import os
+import sys
+
+# Add parent directory to sys.path to allow imports from root
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
 import ollama
-from utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
+from backend.utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
 import logging
-from logging_config import setup_logging
+from backend.utils.logging_config import setup_logging
 from dotenv import load_dotenv
 
-STATE_FILE = "test_state.json"
+STATE_FILE = "tests/test_state.json"
 
 
 def load_state():
@@ -31,8 +35,8 @@ def main():
     logger = logging.getLogger(__name__)
 
     # Create test results directory
-    if not os.path.exists("test_results"):
-        os.makedirs("test_results")
+    if not os.path.exists("tests/test_results"):
+        os.makedirs("tests/test_results")
 
     # Get LLM models from Ollama
     try:
@@ -62,7 +66,7 @@ def main():
             case_file = case_files[case_index]
             case_number = os.path.splitext(case_file)[0].split("_")[1]
             test_name = f"test-{case_number}-{model.replace(':', '_')}"
-            output_file = f"test_results/{test_name}.json"
+            output_file = f"tests/test_results/{test_name}.json"
 
             logger.info(f"Running test: {test_name}")
 
