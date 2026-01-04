@@ -139,7 +139,7 @@ uv run python tests/test_workflow.py
 │   ├── main.py             # API entry point
 │   ├── models.py           # Pydantic data models
 │   └── routers/            # API endpoints
-├── frontend/               # Legacy Streamlit application
+├── frontend/               # Streamlit application
 ├── tests/                  # Test scripts
 ├── utils/                  # Shared logic & Database
 └── README.md               # Documentation

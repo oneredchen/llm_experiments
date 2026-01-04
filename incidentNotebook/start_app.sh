@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Function to kill background processes on exit
 cleanup() {
     echo "Stopping services..."

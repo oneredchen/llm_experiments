@@ -317,21 +317,21 @@ def render_main_content(selected_case, is_ollama_up):
             if not timeline_df.empty:
                 st.download_button("📥 Download CSV", convert_df_to_csv(timeline_df), "timeline.csv", "text/csv")
         render_html_timeline(timeline_df)
-        st.expander("Raw Data").dataframe(timeline_df, use_container_width=True)
+        st.expander("Raw Data").dataframe(timeline_df, width="stretch")
 
     with tab2:
         c_dl, _ = st.columns([1, 4])
         with c_dl:
             if not host_ioc_df.empty:
                 st.download_button("📥 Download CSV", convert_df_to_csv(host_ioc_df), "host_iocs.csv", "text/csv")
-        st.dataframe(host_ioc_df, use_container_width=True, hide_index=True)
+        st.dataframe(host_ioc_df, width="stretch", hide_index=True)
 
     with tab3:
         c_dl, _ = st.columns([1, 4])
         with c_dl:
              if not network_ioc_df.empty:
                 st.download_button("📥 Download CSV", convert_df_to_csv(network_ioc_df), "network_iocs.csv", "text/csv")
-        st.dataframe(network_ioc_df, use_container_width=True, hide_index=True)
+        st.dataframe(network_ioc_df, width="stretch", hide_index=True)
 
 
 def main():
