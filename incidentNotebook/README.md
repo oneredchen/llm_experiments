@@ -38,13 +38,13 @@ This approach allows an analyst to quickly move from unstructured notes to a str
 -   **Dual Interface**:
     -   **REST API**: Built with FastAPI for integration with other tools.
     -   **Web UI**: Built with Streamlit for a clean and interactive user experience.
--   **Extensible**: The agentic workflow, built with LangGraph, can be easily modified to support new IOC types or extraction logic.
+-   **Extensible**: The agentic workflow can be easily modified to support new IOC types or extraction logic.
 
 ## Built With
 
 -   [FastAPI](https://fastapi.tiangolo.com/) - Backend Framework
 -   [Streamlit](https://streamlit.io/) - Frontend Framework
--   [Langchain](https://www.langchain.com/) & [LangGraph](https://langchain-ai.github.io/langgraph/) - LLM Orchestration
+-   [Ollama Python Client](https://github.com/ollama/ollama-python) - LLM Interaction
 -   [Ollama](https://ollama.com/) - Local LLM Hosting
 -   [SQLAlchemy](https://www.sqlalchemy.org/) - Database ORM
 -   [uv](https://github.com/astral-sh/uv) - Package Management
@@ -148,5 +148,5 @@ uv run python tests/test_workflow.py
 ## Development
 
 -   **Package Management**: All Python dependencies are managed with `uv` and defined in `pyproject.toml`.
--   **Agentic Workflow**: The core extraction logic is a stateful graph built with LangGraph. See `utils/ioc_extraction_workflow.py`.
+-   **Agentic Workflow**: The core extraction logic is a stateful workflow implemented in Python. See `utils/ioc_extraction_workflow.py`.
 -   **Database**: The schema is defined in `utils/database.py`.

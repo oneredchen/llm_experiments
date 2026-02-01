@@ -6,13 +6,10 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "ollama>=0.2.1",
-    "langchain-ollama>=0.3.3",
-    "langgraph>=0.4.5",
     "pandas>=2.2.3",
     "sqlalchemy>=2.0.41",
     "streamlit>=1.45.1",
     "python-json-logger>=2.0.7",
-    "langchain>=0.3.27",
     "pyyaml>=6.0.2",
     "python-dotenv>=1.2.0",
     "fastapi>=0.124.0",

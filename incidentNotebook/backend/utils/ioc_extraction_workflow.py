@@ -1,19 +1,16 @@
-from typing import Annotated, List, Optional
-from typing_extensions import TypedDict
-from datetime import datetime, timezone
+from typing import Annotated, List, Optional, Dict, Any, Type
+from datetime import datetime
 from pydantic import BaseModel, Field
 import logging
 import uuid
-
-from langgraph.graph import StateGraph, START, END
-from langgraph.graph.message import add_messages
-from langchain_ollama import ChatOllama
-
-
-from .database import get_database_dialect
+import json
+import ollama
 
 logger = logging.getLogger(__name__)
 
+# ==================================
+# DATA MODELS
+# ==================================
 
 class TimelineOutputFormat(BaseModel):
     submitted_by: Annotated[
@@ -208,39 +205,31 @@ class NetworkIOCOutputList(BaseModel):
     iocs: List[NetworkIOCOutputFormat]
 
 
-class IOCExtractionState(TypedDict):
-    messages: Annotated[list, add_messages]
-    llm: ChatOllama
-    case_id: str
-    host_ioc_decision: str | None
-    network_ioc_decision: str | None
-    host_ioc_objects: List[HostIOCOutputFormat] | None
-    network_ioc_objects: List[NetworkIOCOutputFormat] | None
-    timeline_objects: List[TimelineOutputFormat] | None
-    result: dict[str, list] | None
-    database_dialect: str | None
-
-    # For evaluation loops
-    host_ioc_feedback: str | None
-    host_retry_count: int
-    network_ioc_feedback: str | None
-    network_retry_count: int
-    timeline_feedback: str | None
-    timeline_retry_count: int
-
-
 # ==================================
-# AGENT PROMPTS & LOGIC
+# OLLAMA CLIENT HELPER
 # ==================================
 
+def get_client(host: str | None = None):
+    if host:
+        return ollama.Client(host=host)
+    return ollama
 
-def triage_host_iocs(state: IOCExtractionState):
-    """
-    Determines whether to extract host-based IOCs and stores the decision.
-    """
+def chat_completion(client, model: str, messages: List[Dict], format: str = None, temperature: float = 0.2):
+    options = {
+        "temperature": temperature,
+        "num_ctx": 8192,
+        "num_predict": -2
+    }
+    response = client.chat(model=model, messages=messages, format=format, options=options)
+    return response['message']['content']
+
+# ==================================
+# TRIAGE LOGIC
+# ==================================
+
+def triage_host_iocs(client, model: str, description: str) -> str:
+    """Determines whether to extract host-based IOCs."""
     logger.info("Triage: Checking for host-based IOCs.")
-    last_message = state["messages"][-1]
-    llm = state["llm"]
     messages = [
         {
             "role": "system",
@@ -252,39 +241,16 @@ def triage_host_iocs(state: IOCExtractionState):
 
             Do not provide any explanation or other text.""",
         },
-        {"role": "user", "content": last_message.content},
+        {"role": "user", "content": description},
     ]
-
-    response = llm.invoke(messages)
-    decision = response.content.strip().lower()
+    response = chat_completion(client, model, messages)
+    decision = response.strip().lower()
     logger.info(f"Host-based IOC triage decision: '{decision}'")
-    return {"host_ioc_decision": decision}
+    return decision
 
-
-def decide_host_ioc_path(state: IOCExtractionState):
-    """
-    Reads the triage decision from the state and returns the next node.
-    """
-    if "continue" in state.get("host_ioc_decision", "skip"):
-        return "host_ioc_extractor"
-    return "skip_host_ioc_extraction"
-
-
-def skip_host_ioc_extraction(state: IOCExtractionState):
-    """
-    No-op node that skips host IOC extraction.
-    """
-    logger.info("Skipping host IOC extraction as per triage decision.")
-    return {"host_ioc_objects": []}
-
-
-def triage_network_iocs(state: IOCExtractionState):
-    """
-    Determines whether to extract network-based IOCs and stores the decision.
-    """
+def triage_network_iocs(client, model: str, description: str) -> str:
+    """Determines whether to extract network-based IOCs."""
     logger.info("Triage: Checking for network-based IOCs.")
-    last_message = state["messages"][-1]
-    llm = state["llm"]
     messages = [
         {
             "role": "system",
@@ -296,43 +262,28 @@ def triage_network_iocs(state: IOCExtractionState):
 
             Do not provide any explanation or other text.""",
         },
-        {"role": "user", "content": last_message.content},
+        {"role": "user", "content": description},
     ]
-
-    response = llm.invoke(messages)
-    decision = response.content.strip().lower()
+    response = chat_completion(client, model, messages)
+    decision = response.strip().lower()
     logger.info(f"Network-based IOC triage decision: '{decision}'")
-    return {"network_ioc_decision": decision}
+    return decision
 
+# ==================================
+# EXTRACTION & EVALUATION LOGIC
+# ==================================
 
-def decide_network_ioc_path(state: IOCExtractionState):
-    """
-    Reads the triage decision from the state and returns the next node.
-    """
-    if "continue" in state.get("network_ioc_decision", "skip"):
-        return "network_ioc_extractor"
-    return "skip_network_ioc_extraction"
-
-
-def skip_network_ioc_extraction(state: IOCExtractionState):
-    """
-    No-op node that skips network IOC extraction.
-    """
-    logger.info("Skipping network IOC extraction as per triage decision.")
-    return {"network_ioc_objects": []}
-
-
-def host_ioc_agent(state: IOCExtractionState):
-    """
-    Agent for extracting host IOCs as a list of structured objects.
-    """
-    logger.info("Host IOC agent started.")
-    last_message = state["messages"][-1]
-    llm = state["llm"]
-    feedback = state.get("host_ioc_feedback")
-    retry_count = state.get("host_retry_count", 0)
-
-    system_prompt = """You are a cybersecurity analyst. Extract ONLY **host-based** IOCs from the incident narrative and produce a list of JSON objects conforming to the HostIOCOutputFormat.
+def extract_host_iocs(client, model: str, description: str) -> List[HostIOCOutputFormat]:
+    """Extracts host IOCs with refinement loop."""
+    logger.info("Starting Host IOC extraction loop.")
+    
+    feedback = None
+    last_extraction = []
+    
+    for attempt in range(3):
+        logger.info(f"Host IOC extraction attempt {attempt + 1}")
+        
+        system_prompt = """You are a cybersecurity analyst. Extract ONLY **host-based** IOCs from the incident narrative and produce a JSON object with a list of items conforming to the schema.
 
         HOST_IOC_SCOPE (allowed):
         - Files, processes, services, drivers, DLLs, local executables
@@ -354,87 +305,52 @@ def host_ioc_agent(state: IOCExtractionState):
         - `indicator_id` must be unique within output and follow: 'H-{{001..}}' (zero-padded sequence based on occurrence order in your output).
         - `full_path` can be NULL if it is not available.
         - Truncate `notes` to <= 800 characters.
+        
+        Return JSON object matching this schema:
+        """ + json.dumps(HostIOCOutputList.model_json_schema())
 
-        OUTPUT:
-        - Only a Python list of HostIOCOutputFormat objects (no commentary).
-        - If no host IOCs exist, return an empty list [].
-        """
-    if feedback:
-        system_prompt += f"\n\nYour previous attempt was not perfect. Please improve it based on this feedback: {feedback}"
+        if feedback:
+            system_prompt += f"\n\nYour previous attempt was not perfect. Please improve it based on this feedback: {feedback}"
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": last_message.content},
-    ]
-
-    response = llm.with_structured_output(HostIOCOutputList).invoke(messages)
-    for ioc in response.iocs:
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": description},
+        ]
+        
+        try:
+            response_str = chat_completion(client, model, messages, format='json')
+            response_json = json.loads(response_str)
+            parsed_result = HostIOCOutputList.model_validate(response_json)
+            last_extraction = parsed_result.iocs
+            
+            # Evaluate
+            evaluation = evaluate_extraction(client, model, last_extraction, "host")
+            if evaluation == "perfect" or evaluation == "no_iocs":
+                break
+            feedback = evaluation
+            
+        except Exception as e:
+            logger.error(f"Error in Host extraction attempt {attempt + 1}: {e}")
+            feedback = f"Encountered error: {str(e)}. Please ensure valid JSON output matching the schema."
+            
+    # Post-process to ensure UUIDs if needed (though prompt asks for H-001, code might want UUIDs)
+    # The original code overwrote indicator_id with UUIDs. Let's do that to match behavior.
+    for ioc in last_extraction:
         ioc.indicator_id = f"H-{uuid.uuid4()}"
-    logger.info(f"Host IOC agent completed. Found {len(response.iocs)} objects.")
-    return {"host_ioc_objects": response.iocs, "host_retry_count": retry_count + 1}
+        
+    return last_extraction
 
-
-def evaluate_host_iocs(state: IOCExtractionState):
-    """
-    Evaluates the extracted host IOCs and provides feedback.
-    """
-    logger.info("Evaluating extracted host IOCs.")
-    llm = state["llm"]
-    host_iocs = state.get("host_ioc_objects")
-
-    if not host_iocs:
-        logger.info("No host IOCs to evaluate.")
-        return {"host_ioc_feedback": "no_iocs"}
-
-    iocs_str = "\n".join([ioc.model_dump_json() for ioc in host_iocs])
-    messages = [
-        {
-            "role": "system",
-            "content": f"""You are a senior cybersecurity analyst responsible for quality control.
-            Review the following JSON objects representing host-based IOCs extracted from an incident description.
-
-            Your task is to:
-            1.  Check for correctness, completeness, and adherence to the required format.
-            2.  Identify any obvious errors, omissions, or areas for improvement.
-            3.  Provide concise feedback.
-
-            If the IOCs are good quality and need no changes, respond with the single word "perfect".
-            Otherwise, provide a brief, actionable feedback on what to improve (e.g., "Missing indicator_id for some items.", "Indicator_type is incorrect for process IOCs.").
-            Do not try to fix the IOCs yourself. Just provide feedback.
-
-            Extracted IOCs:
-            {iocs_str}
-            """,
-        },
-    ]
-    response = llm.invoke(messages)
-    evaluation = response.content.strip()
-    logger.info(f"Host IOC evaluation result: '{evaluation}'")
-    return {"host_ioc_feedback": evaluation}
-
-
-def decide_host_loop(state: IOCExtractionState):
-    """
-    Decides whether to re-run the host IOC extractor.
-    """
-    feedback = state.get("host_ioc_feedback")
-    retry_count = state.get("host_retry_count", 0)
-    if feedback and feedback != "perfect" and feedback != "no_iocs" and retry_count < 3:
-        return "host_ioc_extractor"
-    return "timeline_ioc_extractor"
-
-
-def network_ioc_agent(state: IOCExtractionState):
-    """
-    Agent for extracting only network-based IOCs as a list of structured objects.
-    """
-    logger.info("Network IOC agent started.")
-    last_message = state["messages"][-1]
-    llm = state["llm"]
-    feedback = state.get("network_ioc_feedback")
-    retry_count = state.get("network_retry_count", 0)
-
-    system_prompt = """You are a cybersecurity analyst. Extract ONLY **network-based** IOCs from the incident narrative and produce a list of JSON objects conforming to the NetworkIOCOutputFormat.
+def extract_network_iocs(client, model: str, description: str) -> List[NetworkIOCOutputFormat]:
+    """Extracts network IOCs with refinement loop."""
+    logger.info("Starting Network IOC extraction loop.")
+    
+    feedback = None
+    last_extraction = []
+    
+    for attempt in range(3):
+        logger.info(f"Network IOC extraction attempt {attempt + 1}")
+        
+        system_prompt = """You are a cybersecurity analyst. Extract ONLY **network-based** IOCs from the incident narrative and produce a JSON object with a list of items conforming to the schema.
 
         NETWORK_IOC_SCOPE (allowed):
         - IP addresses (v4/v6), domains, FQDNs, URLs/URIs
@@ -454,88 +370,51 @@ def network_ioc_agent(state: IOCExtractionState):
         - `indicator_id` must be unique in output and follow: 'N-{{001..}}'.
         - Keep `attack_alignment` concise (MITRE style) if clearly implied; else NULL.
         - Truncate `notes` to <= 800 chars.
+        
+        Return JSON object matching this schema:
+        """ + json.dumps(NetworkIOCOutputList.model_json_schema())
 
-        OUTPUT:
-        - Only a Python list of NetworkIOCOutputFormat objects (no commentary).
-        - If no network IOCs exist, return an empty list [].
-        """
-    if feedback:
-        system_prompt += f"\n\nYour previous attempt was not perfect. Please improve it based on this feedback: {feedback}"
+        if feedback:
+            system_prompt += f"\n\nYour previous attempt was not perfect. Please improve it based on this feedback: {feedback}"
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": last_message.content},
-    ]
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": description},
+        ]
+        
+        try:
+            response_str = chat_completion(client, model, messages, format='json')
+            response_json = json.loads(response_str)
+            parsed_result = NetworkIOCOutputList.model_validate(response_json)
+            last_extraction = parsed_result.iocs
+            
+            # Evaluate
+            evaluation = evaluate_extraction(client, model, last_extraction, "network")
+            if evaluation == "perfect" or evaluation == "no_iocs":
+                break
+            feedback = evaluation
+            
+        except Exception as e:
+            logger.error(f"Error in Network extraction attempt {attempt + 1}: {e}")
+            feedback = f"Encountered error: {str(e)}. Please ensure valid JSON output matching the schema."
 
-    response = llm.with_structured_output(NetworkIOCOutputList).invoke(messages)
-    for ioc in response.iocs:
+    # Post-process UUIDs
+    for ioc in last_extraction:
         ioc.indicator_id = f"N-{uuid.uuid4()}"
-    logger.info(f"Network IOC agent completed. Found {len(response.iocs)} objects.")
-    return {
-        "network_ioc_objects": response.iocs,
-        "network_retry_count": retry_count + 1,
-    }
+        
+    return last_extraction
 
-
-def evaluate_network_iocs(state: IOCExtractionState):
-    """
-    Evaluates the extracted network IOCs and provides feedback.
-    """
-    logger.info("Evaluating extracted network IOCs.")
-    llm = state["llm"]
-    network_iocs = state.get("network_ioc_objects")
-
-    if not network_iocs:
-        logger.info("No network IOCs to evaluate.")
-        return {"network_ioc_feedback": "no_iocs"}
-
-    iocs_str = "\n".join([ioc.model_dump_json() for ioc in network_iocs])
-    messages = [
-        {
-            "role": "system",
-            "content": f"""You are a senior cybersecurity analyst responsible for quality control.
-            Review the following JSON objects representing network-based IOCs extracted from an incident description.
-
-            Your task is to:
-            1.  Check for correctness, completeness, and adherence to the required format.
-            2.  Identify any obvious errors, omissions, or areas for improvement.
-            3.  Provide concise feedback.
-
-            If the IOCs are good quality and need no changes, respond with the single word "perfect".
-            Otherwise, provide a brief, actionable feedback on what to improve (e.g., "Missing indicator_id for some items.", "Indicator_type is incorrect for IP IOCs.").
-            Do not try to fix the IOCs yourself. Just provide feedback.
-
-            Extracted IOCs:
-            {iocs_str}
-            """,
-        },
-    ]
-    response = llm.invoke(messages)
-    evaluation = response.content.strip()
-    logger.info(f"Network IOC evaluation result: '{evaluation}'")
-    return {"network_ioc_feedback": evaluation}
-
-
-def decide_network_loop(state: IOCExtractionState):
-    """
-    Decides whether to re-run the network IOC extractor.
-    """
-    feedback = state.get("network_ioc_feedback")
-    retry_count = state.get("network_retry_count", 0)
-    if feedback and feedback != "perfect" and feedback != "no_iocs" and retry_count < 3:
-        return "network_ioc_extractor"
-    return "timeline_ioc_extractor"
-
-
-def timeline_ioc_agent(state: IOCExtractionState):
-    """Agent for extracting timeline-based IOCs as a list of structured objects."""
-    logger.info("Timeline IOC agent started.")
-    last_message = state["messages"][-1]
-    llm = state["llm"]
-    feedback = state.get("timeline_feedback")
-    retry_count = state.get("timeline_retry_count", 0)
-
-    system_prompt = """You are a cybersecurity analyst. Extract **timeline events** (not raw IOCs) from the incident narrative and produce a list of JSON objects conforming to the TimelineOutputFormat.
+def extract_timeline_events(client, model: str, description: str) -> List[TimelineOutputFormat]:
+    """Extracts timeline events with refinement loop."""
+    logger.info("Starting Timeline extraction loop.")
+    
+    feedback = None
+    last_extraction = []
+    
+    for attempt in range(3):
+        logger.info(f"Timeline extraction attempt {attempt + 1}")
+        
+        system_prompt = """You are a cybersecurity analyst. Extract **timeline events** (not raw IOCs) from the incident narrative and produce a JSON object with a list of items conforming to the schema.
 
         TIMELINE_SCOPE (include):
         - Discrete activities with timestamps or clear temporal ordering
@@ -554,182 +433,69 @@ def timeline_ioc_agent(state: IOCExtractionState):
         - `attack_alignment` concise MITRE tactic if clear; else NULL.
         - `size_bytes` integer or NULL; `hash` string or NULL.
         - Truncate `details_comments`/`notes` to <= 1000 chars.
+        
+        Return JSON object matching this schema:
+        """ + json.dumps(TimelineOutputList.model_json_schema())
 
-        OUTPUT:
-        - Only a Python list of TimelineOutputFormat objects (no commentary).
-        - If no timeline events exist, return an empty list [].
-        """
-    if feedback:
-        system_prompt += f"\n\nYour previous attempt was not perfect. Please improve it based on this feedback: {feedback}"
+        if feedback:
+            system_prompt += f"\n\nYour previous attempt was not perfect. Please improve it based on this feedback: {feedback}"
 
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": description},
+        ]
+        
+        try:
+            response_str = chat_completion(client, model, messages, format='json')
+            response_json = json.loads(response_str)
+            parsed_result = TimelineOutputList.model_validate(response_json)
+            last_extraction = parsed_result.iocs
+            
+            # Evaluate
+            evaluation = evaluate_extraction(client, model, last_extraction, "timeline")
+            if evaluation == "perfect" or evaluation == "no_iocs":
+                break
+            feedback = evaluation
+            
+        except Exception as e:
+            logger.error(f"Error in Timeline extraction attempt {attempt + 1}: {e}")
+            feedback = f"Encountered error: {str(e)}. Please ensure valid JSON output matching the schema."
+
+    return last_extraction
+
+def evaluate_extraction(client, model: str, extracted_data: List[Any], type_label: str) -> str:
+    """Evaluates the extracted data and provides feedback."""
+    if not extracted_data:
+        return "no_iocs"
+
+    iocs_str = "\n".join([item.model_dump_json() for item in extracted_data])
+    
+    system_prompt = f"""You are a senior cybersecurity analyst responsible for quality control.
+    Review the following JSON objects representing {type_label} data extracted from an incident description.
+
+    Your task is to:
+    1.  Check for correctness, completeness, and adherence to the required format.
+    2.  Identify any obvious errors, omissions, or areas for improvement.
+    3.  Provide concise feedback.
+
+    If the data is good quality and need no changes, respond with the single word "perfect".
+    Otherwise, provide a brief, actionable feedback on what to improve.
+    Do not try to fix the data yourself. Just provide feedback.
+    """
+    
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": last_message.content},
+        {"role": "user", "content": f"Extracted Data:\n{iocs_str}"}
     ]
-
-    response = llm.with_structured_output(TimelineOutputList).invoke(messages)
-    logger.info(f"Timeline IOC agent completed. Found {len(response.iocs)} objects.")
-    return {"timeline_objects": response.iocs, "timeline_retry_count": retry_count + 1}
-
-
-def evaluate_timeline_iocs(state: IOCExtractionState):
-    """
-    Evaluates the extracted timeline IOCs and provides feedback.
-    """
-    logger.info("Evaluating extracted timeline IOCs.")
-    llm = state["llm"]
-    timeline_iocs = state.get("timeline_objects")
-
-    if not timeline_iocs:
-        logger.info("No timeline IOCs to evaluate.")
-        return {"timeline_feedback": "no_iocs"}
-
-    iocs_str = "\n".join([ioc.model_dump_json() for ioc in timeline_iocs])
-    messages = [
-        {
-            "role": "system",
-            "content": f"""You are a senior cybersecurity analyst responsible for quality control.
-            Review the following JSON objects representing timeline events extracted from an incident description.
-
-            Your task is to:
-            1.  Check for correctness, completeness, and adherence to the required format.
-            2.  Identify any obvious errors, omissions, or areas for improvement.
-            3.  Provide concise feedback.
-
-            If the IOCs are good quality and need no changes, respond with the single word "perfect".
-            Otherwise, provide a brief, actionable feedback on what to improve (e.g., "Missing system_name for some items.", "Timestamp format is incorrect.").
-            Do not try to fix the IOCs yourself. Just provide feedback.
-
-            Extracted IOCs:
-            {iocs_str}
-            """,
-        },
-    ]
-    response = llm.invoke(messages)
-    evaluation = response.content.strip()
-    logger.info(f"Timeline IOC evaluation result: '{evaluation}'")
-    return {"timeline_feedback": evaluation}
-
-
-def decide_timeline_loop(state: IOCExtractionState):
-    """
-    Decides whether to re-run the timeline IOC extractor.
-    """
-    feedback = state.get("timeline_feedback")
-    retry_count = state.get("timeline_retry_count", 0)
-    if feedback and feedback != "perfect" and feedback != "no_iocs" and retry_count < 3:
-        return "timeline_ioc_extractor"
-    return "ioc_result_aggregator"
-
-
-def ioc_result_aggregator(state: IOCExtractionState):
-    """Aggregates the results from the IOC extraction agents."""
-    logger.info("IOC result aggregator started.")
-    combined_result = {
-        "host_ioc_objects": state.get("host_ioc_objects", []),
-        "network_ioc_objects": state.get("network_ioc_objects", []),
-        "timeline_objects": state.get("timeline_objects", []),
-    }
-    logger.info("IOC result aggregator completed.")
-    return {"result": combined_result}
-
-
-# ==================================
-# GRAPH CONSTRUCTION
-# ==================================
-
-
-def ioc_extraction_graph_builder():
-    graph_builder = StateGraph(IOCExtractionState)
-
-    # Triage nodes
-    graph_builder.add_node("triage_host_iocs", triage_host_iocs)
-    graph_builder.add_node("triage_network_iocs", triage_network_iocs)
-
-    # Host branch
-    graph_builder.add_node("host_ioc_extractor", host_ioc_agent)
-    graph_builder.add_node("skip_host_ioc_extraction", skip_host_ioc_extraction)
-    graph_builder.add_node("evaluate_host_iocs", evaluate_host_iocs)
-
-    # Network branch
-    graph_builder.add_node("network_ioc_extractor", network_ioc_agent)
-    graph_builder.add_node("skip_network_ioc_extraction", skip_network_ioc_extraction)
-    graph_builder.add_node("evaluate_network_iocs", evaluate_network_iocs)
-
-    # Timeline branch
-    graph_builder.add_node("timeline_ioc_extractor", timeline_ioc_agent)
-    graph_builder.add_node("evaluate_timeline_iocs", evaluate_timeline_iocs)
-
-    # Aggregator
-    graph_builder.add_node("ioc_result_aggregator", ioc_result_aggregator)
-
-    # Start
-    graph_builder.add_edge(START, "triage_host_iocs")
-    graph_builder.add_edge(START, "triage_network_iocs")
-
-    # Host triage
-    graph_builder.add_conditional_edges(
-        "triage_host_iocs",
-        decide_host_ioc_path,
-        {
-            "host_ioc_extractor": "host_ioc_extractor",
-            "skip_host_ioc_extraction": "timeline_ioc_extractor",
-        },
-    )
-
-    # Network triage
-    graph_builder.add_conditional_edges(
-        "triage_network_iocs",
-        decide_network_ioc_path,
-        {
-            "network_ioc_extractor": "network_ioc_extractor",
-            "skip_network_ioc_extraction": "timeline_ioc_extractor",
-        },
-    )
-
-    # Host loop
-    graph_builder.add_edge("host_ioc_extractor", "evaluate_host_iocs")
-    graph_builder.add_conditional_edges(
-        "evaluate_host_iocs",
-        decide_host_loop,
-        {
-            "host_ioc_extractor": "host_ioc_extractor",
-            "timeline_ioc_extractor": "timeline_ioc_extractor",
-        },
-    )
-
-    # Network loop
-    graph_builder.add_edge("network_ioc_extractor", "evaluate_network_iocs")
-    graph_builder.add_conditional_edges(
-        "evaluate_network_iocs",
-        decide_network_loop,
-        {
-            "network_ioc_extractor": "network_ioc_extractor",
-            "timeline_ioc_extractor": "timeline_ioc_extractor",
-        },
-    )
-
-    # Timeline loop
-    graph_builder.add_edge("timeline_ioc_extractor", "evaluate_timeline_iocs")
-    graph_builder.add_conditional_edges(
-        "evaluate_timeline_iocs",
-        decide_timeline_loop,
-        {
-            "timeline_ioc_extractor": "timeline_ioc_extractor",
-            "ioc_result_aggregator": "ioc_result_aggregator",
-        },
-    )
-
-    # End
-    graph_builder.add_edge("ioc_result_aggregator", END)
-
-    return graph_builder.compile()
-
+    
+    response = chat_completion(client, model, messages)
+    evaluation = response.strip()
+    logger.info(f"{type_label.capitalize()} evaluation result: '{evaluation}'")
+    return evaluation
 
 # ==================================
 # WORKFLOW ENTRYPOINT
 # ==================================
-
 
 def ioc_extraction_agent_workflow(
     llm_model: str,
@@ -737,36 +503,33 @@ def ioc_extraction_agent_workflow(
     incident_description: str,
     ollama_host: str | None = None,
 ):
-    """Workflow for IOC extraction agent."""
+    """Workflow for IOC extraction agent (Replaces LangGraph implementation)."""
     logger.info(f"Starting IOC extraction workflow for case: {case_id}")
-    logger.debug(f"LLM Model: {llm_model}")
-    logger.debug(f"Incident Description: {incident_description}")
+    
+    client = get_client(ollama_host)
+    
+    results = {
+        "host_ioc_objects": [],
+        "network_ioc_objects": [],
+        "timeline_objects": []
+    }
 
-    llm_params = {
-        "model": llm_model,
-        "temperature": 0.2,  # Lower temperature for more deterministic output
-        "num_predict": -2,
-        "num_ctx": 8192,
-    }
-    if ollama_host:
-        llm_params["base_url"] = ollama_host
+    # 1. Triage & Extract Host IOCs
+    host_decision = triage_host_iocs(client, llm_model, incident_description)
+    if "continue" in host_decision:
+        results["host_ioc_objects"] = extract_host_iocs(client, llm_model, incident_description)
+    else:
+        logger.info("Skipping Host IOC extraction.")
 
-    llm = ChatOllama(**llm_params)
-    initial_message = {
-        "role": "user",
-        "content": f"Incident Description: {incident_description}",
-    }
-    graph = ioc_extraction_graph_builder()
-    state = {
-        "messages": [initial_message],
-        "llm": llm,
-        "case_id": case_id,
-        "database_dialect": get_database_dialect(),
-        "host_retry_count": 0,
-        "network_retry_count": 0,
-        "timeline_retry_count": 0,
-    }
-    logger.info("Invoking IOC extraction graph.")
-    result_state = graph.invoke(state)
+    # 2. Triage & Extract Network IOCs
+    network_decision = triage_network_iocs(client, llm_model, incident_description)
+    if "continue" in network_decision:
+        results["network_ioc_objects"] = extract_network_iocs(client, llm_model, incident_description)
+    else:
+        logger.info("Skipping Network IOC extraction.")
+
+    # 3. Extract Timeline Events (Always runs in original flow)
+    results["timeline_objects"] = extract_timeline_events(client, llm_model, incident_description)
+
     logger.info(f"IOC extraction workflow completed for case: {case_id}")
-    return result_state.get("result", {})
+    return results
