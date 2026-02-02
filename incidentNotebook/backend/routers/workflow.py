@@ -79,3 +79,16 @@ def extract_iocs(case_id: str, request: ExtractionRequest):
     except Exception as e:
         logger.error(f"Error during IOC extraction for case {case_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+@router.get("/workflow/models")
+def get_models():
+    """Fetches available models from Ollama."""
+    try:
+        from backend.utils.ioc_extraction_workflow import get_client
+        client = get_client(ollama_host)
+        response = client.list()
+        # Handle both object and dict response types if necessary, but we saw object properties
+        models = [m.model for m in response.models]
+        return {"models": models}
+    except Exception as e:
+        logger.error(f"Error fetching models: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

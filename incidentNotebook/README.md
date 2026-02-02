@@ -28,6 +28,8 @@ This approach allows an analyst to quickly move from unstructured notes to a str
 
 ## Features
 
+## Features
+
 -   **Natural Language Processing**: Paste raw incident notes and let the LLM do the heavy lifting.
 -   **Structured IOC Extraction**: Automatically identifies and categorizes three types of data:
     -   **Host-based IOCs**: File names, hashes, registry keys, etc.
@@ -37,13 +39,15 @@ This approach allows an analyst to quickly move from unstructured notes to a str
 -   **Local First**: Runs entirely on your local machine, ensuring data privacy and security.
 -   **Dual Interface**:
     -   **REST API**: Built with FastAPI for integration with other tools.
-    -   **Web UI**: Built with Streamlit for a clean and interactive user experience.
+    -   **Modern Web UI**: Built with **Next.js 14, TypeScript, and ShadCN UI** for a premium, responsive experience.
 -   **Extensible**: The agentic workflow can be easily modified to support new IOC types or extraction logic.
 
 ## Built With
 
 -   [FastAPI](https://fastapi.tiangolo.com/) - Backend Framework
--   [Streamlit](https://streamlit.io/) - Frontend Framework
+-   [Next.js](https://nextjs.org/) - Frontend Framework (App Router)
+-   [ShadCN UI](https://ui.shadcn.com/) - Component Library
+-   [Tailwind CSS](https://tailwindcss.com/) - Styling
 -   [Ollama Python Client](https://github.com/ollama/ollama-python) - LLM Interaction
 -   [Ollama](https://ollama.com/) - Local LLM Hosting
 -   [SQLAlchemy](https://www.sqlalchemy.org/) - Database ORM
@@ -64,8 +68,12 @@ Follow these steps to get the application running on your local machine.
     -   ```bash
       ollama pull mistral
       ```
+    -   For best results with the new frontend, ensure you have `gemini-2.0-flash-exp` or similar if using the default selection, or select `mistral` in the UI.
 
-3.  **Install uv**:
+3.  **Install Node.js**:
+    -   Required for the Next.js frontend.
+
+4.  **Install uv**:
     -   The project uses `uv` for fast dependency management.
     -   ```bash
       curl -Ls https://astral.sh/uv/install.sh | sh
@@ -79,24 +87,22 @@ Follow these steps to get the application running on your local machine.
     cd incident-notebook
     ```
 
-2.  **Install Dependencies**:
+2.  **Install Backend Dependencies**:
     -   `uv` will create a virtual environment and verify all required packages.
     -   ```bash
       uv sync
       ```
 
+3.  **Install Frontend Dependencies**:
+    ```bash
+    cd frontend-next
+    npm install
+    cd ..
+    ```
+
 ## Usage
 
-
-
-### Easy Start
-
-You can run both the backend and frontend with a single command:
-```bash
-./start_app.sh
-```
-
-### Running the Application (Backend API)
+### Running the Backend (API)
 
 The backend provides the core logic and database access.
 
@@ -106,7 +112,14 @@ uv run uvicorn backend.main:app --port 8000 --reload
 ```
 The API will be available at `http://localhost:8000`.
 
+### Running the Frontend (UI)
 
+From the `frontend-next` directory:
+```bash
+cd frontend-next
+npm run dev
+```
+Access the application at `http://localhost:3000`.
 
 ## API Documentation
 
@@ -139,7 +152,8 @@ uv run python tests/test_workflow.py
 │   ├── main.py             # API entry point
 │   ├── models.py           # Pydantic data models
 │   └── routers/            # API endpoints
-├── frontend/               # Streamlit application
+├── frontend-next/          # Next.js + ShadCN application
+
 ├── tests/                  # Test scripts
 ├── utils/                  # Shared logic & Database
 └── README.md               # Documentation

@@ -20,6 +20,17 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Add CORS Middleware
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://192.168.50.84:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
 app.include_router(cases.router, tags=["cases"])
 app.include_router(workflow.router, tags=["workflow"])

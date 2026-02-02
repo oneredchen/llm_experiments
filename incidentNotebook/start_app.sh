@@ -15,13 +15,13 @@ BACKEND_PID=$!
 echo "Waiting for backend to initialize..."
 sleep 2
 
-echo "Starting Frontend (Streamlit)..."
-uv run streamlit run frontend/app.py &
+echo "Starting Frontend (Next.js)..."
+(cd frontend-next && npm run dev) &
 FRONTEND_PID=$!
 
 echo "App is running!"
 echo "Backend: http://localhost:8000"
-echo "Frontend: http://localhost:8501"
+echo "Frontend: http://localhost:3000"
 echo "Press Ctrl+C to stop."
 
 # Wait for both processes
