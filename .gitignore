@@ -129,12 +129,37 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+.env.*
+!.env.template
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+.venv/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm/
+
+# Next.js
+.next/
+out/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Spyder project settings
 .spyderproject
@@ -170,7 +195,12 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Non-essential files
+# Non-essential files / specific project ignores
 agentic_investigator/
+fileAnalyzer/input/
+fileAnalyzer/output/
+incidentNotebook/db/
+incidentNotebook/logs/
 input/
 output/
+.DS_Store
