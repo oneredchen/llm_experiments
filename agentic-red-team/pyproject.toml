@@ -12,3 +12,4 @@ dependencies = [
     "langchain-ollama>=1.0.1",
     "pydantic-settings>=2.13.1",
 ]
+

@@ -1,0 +1,11 @@
+services:
+  kali-mcp:
+    build: .
+    container_name: kali-mcp
+    ports:
+      - "5000:5000"
+    environment:
+      - API_PORT=5000
+      - COMMAND_TIMEOUT=180
+      - DEBUG_MODE=0
+    restart: unless-stopped
