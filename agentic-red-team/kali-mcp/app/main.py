@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 import sys
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
@@ -22,14 +23,22 @@ logger = logging.getLogger(__name__)
 API_PORT = int(os.environ.get("API_PORT", 5000))
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "0").lower() in ("1", "true", "yes", "y")
 
-app = FastAPI(title="Kali Linux Tools API Server")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with mcp.session_manager.run():
+        yield
+
+
+app = FastAPI(title="Kali Linux Tools API Server", lifespan=lifespan)
 
 # Include routers
 app.include_router(tools_router)
 app.include_router(health_router)
 
-# Mount MCP server (Streamable HTTP transport) at /mcp
-app.mount("/mcp", mcp.streamable_http_app())
+# Mount MCP server (Streamable HTTP transport)
+# streamable_http_app() has an internal route at /mcp, so mount at / to expose it at /mcp
+app.mount("/", mcp.streamable_http_app())
 
 
 @app.get("/")

@@ -12,7 +12,7 @@ from services.command_executor import execute_command
 mcp = FastMCP(
     name="kali-mcp",
     instructions="MCP server exposing Kali Linux security tools for authorized penetration testing.",
-    stateless_http=True,
+    host="0.0.0.0",
 )
 
 

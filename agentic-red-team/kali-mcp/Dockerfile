@@ -28,6 +28,6 @@ COPY app/ ./
 # Install Python dependencies with uv
 RUN uv sync --frozen
 
-EXPOSE 5000
+EXPOSE 3000
 
-CMD ["uv", "run", "main.py", "--ip", "0.0.0.0", "--port", "5000"]
+CMD ["uv", "run", "main.py", "--ip", "0.0.0.0", "--port", "3000"]
