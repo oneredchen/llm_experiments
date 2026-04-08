@@ -6,6 +6,9 @@ services:
       - "3000:3000"
     environment:
       - API_PORT=3000
-      - COMMAND_TIMEOUT=180
+      - COMMAND_TIMEOUT=3600
       - DEBUG_MODE=0
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
     restart: unless-stopped

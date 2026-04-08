@@ -38,12 +38,17 @@ def setup_logging() -> None:
     logging.getLogger("agent").info("Logging initialised — writing to %s", log_file)
 
 
+TARGET = "192.168.50.70"
+
+
 async def main():
     setup_logging()
-    print("Hello from agentic-red-team!")
-    user_prompt = "Perform a vulnerability scan on the target ip 192.168.50.70"
-    response = await run_workflow(user_prompt)
-    print(response)
+    print(f"Starting red team engagement against {TARGET}")
+    report = await run_workflow(TARGET)
+    print("\n" + "=" * 60)
+    print("FINAL REPORT")
+    print("=" * 60)
+    print(report)
 
 
 if __name__ == "__main__":

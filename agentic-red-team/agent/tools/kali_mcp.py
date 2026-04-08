@@ -9,6 +9,8 @@ def get_kali_mcp_client() -> MultiServerMCPClient:
             "kali": {
                 "transport": "streamable_http",
                 "url": KALI_SERVER_URL,
+                "timeout": 1800,  # httpx request/connect timeout (seconds)
+                "sse_read_timeout": 2000,  # SSE stream read timeout — must exceed longest tool call
             }
         }
     )
@@ -17,6 +19,4 @@ def get_kali_mcp_client() -> MultiServerMCPClient:
 async def get_tools():
     client = get_kali_mcp_client()
     tools = await client.get_tools()  # returns list of LangChain-compatible tools
-    for tool in tools:
-        print(tool)
     return tools
