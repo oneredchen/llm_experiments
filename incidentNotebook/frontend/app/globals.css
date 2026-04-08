@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --scrollbar-track: #0F1420;
+  --scrollbar-thumb: #1C2438;
+  --scrollbar-thumb-hover: #2A3A52;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: #08090E;
+  color: #E4EAF2;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Dot grid background texture */
+.dot-grid {
+  background-image: radial-gradient(
+    circle,
+    rgba(28, 36, 56, 0.8) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* Amber glow effect */
+.amber-glow {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.08),
+    0 0 40px rgba(245, 158, 11, 0.04);
+}
+
+/* Scan line overlay for the sidebar */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.04) 2px,
+    rgba(0, 0, 0, 0.04) 4px
+  );
+  pointer-events: none;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #0F1420 25%,
+    #161D2E 50%,
+    #0F1420 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* Status badge base */
+.status-badge {
+  @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-mono font-medium tracking-wide uppercase;
+}
+
+/* IOC table row hover */
+.ioc-row {
+  @apply border-b border-border-subtle transition-colors duration-100;
+}
+.ioc-row:hover {
+  background-color: rgba(22, 29, 46, 0.8);
+}
+
+/* Monospace value - for IPs, hashes, etc. */
+.mono-value {
+  @apply font-mono text-sm tracking-tight;
+  color: #22D3EE;
+}
