@@ -1,10 +1,9 @@
 [project]
-name = "kali-mcp"
+name = "kali-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "Kali Linux Tools REST API"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.135.2",
-    "mcp[cli]>=1.26.0",
     "uvicorn[standard]>=0.42.0",
 ]

@@ -2,16 +2,13 @@ import argparse
 import logging
 import os
 import sys
-from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
 
 from routers.tools import router as tools_router
 from routers.health import router as health_router
-from mcp_server import mcp
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -19,35 +16,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configuration
 API_PORT = int(os.environ.get("API_PORT", 5000))
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "0").lower() in ("1", "true", "yes", "y")
 
+app = FastAPI(title="Kali Linux Tools API")
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    async with mcp.session_manager.run():
-        yield
-
-
-app = FastAPI(title="Kali Linux Tools API Server", lifespan=lifespan)
-
-# Include routers
 app.include_router(tools_router)
 app.include_router(health_router)
-
-# Mount MCP server (Streamable HTTP transport)
-# streamable_http_app() has an internal route at /mcp, so mount at / to expose it at /mcp
-app.mount("/", mcp.streamable_http_app())
 
 
 @app.get("/")
 async def index():
-    return {"message": "Welcome to Kali API Server"}
+    return {"message": "Kali API"}
 
 
 def parse_args():
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Run the Kali Linux API Server")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument(
@@ -60,7 +43,7 @@ def parse_args():
         "--ip",
         type=str,
         default="127.0.0.1",
-        help="IP address to bind the server to (default: 127.0.0.1 for localhost only)",
+        help="IP address to bind the server to (default: 127.0.0.1)",
     )
     return parser.parse_args()
 
@@ -76,5 +59,5 @@ if __name__ == "__main__":
     if args.port != API_PORT:
         API_PORT = args.port
 
-    logger.info(f"Starting Kali Linux Tools API Server on {args.ip}:{API_PORT}")
+    logger.info(f"Starting Kali API on {args.ip}:{API_PORT}")
     uvicorn.run("main:app", host=args.ip, port=API_PORT, reload=DEBUG_MODE)

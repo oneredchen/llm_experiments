@@ -1,12 +1,12 @@
 services:
-  kali-mcp:
+  kali-api:
     build: .
-    container_name: kali-mcp
+    container_name: kali-api
     ports:
       - "3000:3000"
     environment:
       - API_PORT=3000
-      - COMMAND_TIMEOUT=3600
+      - COMMAND_TIMEOUT=600
       - DEBUG_MODE=0
     cap_add:
       - NET_RAW
