@@ -16,7 +16,7 @@ echo "Waiting for backend to initialize..."
 sleep 2
 
 echo "Starting Frontend (Next.js)..."
-(cd frontend-next && npm run dev) &
+(cd frontend && npm run dev) &
 FRONTEND_PID=$!
 
 echo "App is running!"
