@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penetration Test Report — 192.168.50.70 - Penetration Test Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050508;
+            --bg-card: rgba(20, 20, 25, 0.6);
+            --bg-card-hover: rgba(30, 30, 35, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-bright: rgba(255, 255, 255, 0.15);
+
+            --text-main: #e0e6ed;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+
+            --cyan: #00f3ff;
+            --cyan-glow: rgba(0, 243, 255, 0.3);
+            --red: #ff0055;
+            --red-glow: rgba(255, 0, 85, 0.3);
+            --orange: #ff8c00;
+            --orange-glow: rgba(255, 140, 0, 0.3);
+            --yellow: #ffcc00;
+            --yellow-glow: rgba(255, 204, 0, 0.3);
+            --green: #00ff88;
+
+            --sidebar-width: 280px;
+            --container-max: 1200px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(0, 243, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 85, 0.03) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        code, pre, .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-deep); }
+        ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+        /* Layout */
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: rgba(10, 10, 15, 0.8);
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(20px);
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--cyan);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            box-shadow: 0 0 15px var(--cyan-glow);
+        }
+
+        .nav-links { list-style: none; flex-grow: 1; }
+        .nav-item { margin-bottom: 0.5rem; }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .nav-link:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.03); border-color: var(--border); }
+        .nav-link.active { color: var(--cyan); background: rgba(0, 243, 255, 0.05); border-color: rgba(0, 243, 255, 0.2); }
+
+        .nav-section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-dim);
+            margin: 2rem 0 0.75rem 1rem;
+            font-weight: 700;
+        }
+
+        /* Main Content */
+        .main-content { flex-grow: 1; padding: 0; max-width: calc(100% - var(--sidebar-width)); }
+
+        .section {
+            padding: 6rem 4rem;
+            border-bottom: 1px solid var(--border);
+            max-width: var(--container-max);
+            margin: 0 auto;
+        }
+
+        /* Cover Section */
+        .cover-section {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.05) 0%, transparent 70%);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.4rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+            border: 1px solid transparent;
+        }
+
+        .badge-confidential { color: var(--red); background: var(--red-glow); border-color: rgba(255, 0, 85, 0.3); }
+
+        .main-title {
+            font-size: clamp(3rem, 8vw, 5rem);
+            line-height: 1;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(to bottom right, #fff 40%, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+            max-width: 800px;
+        }
+
+        .meta-item label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .meta-item span { font-size: 1.1rem; font-weight: 600; color: var(--text-main); }
+
+        /* Section Components */
+        .section-header { margin-bottom: 3rem; }
+        .section-number { font-size: 1rem; font-family: 'JetBrains Mono', monospace; color: var(--cyan); margin-bottom: 0.5rem; display: block; }
+        .section-title { font-size: 2.5rem; font-weight: 700; }
+
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+        .content-card:hover { border-color: var(--border-bright); background: var(--bg-card-hover); }
+
+        /* Risk Rating */
+        .risk-rating-container {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        .risk-score {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid var(--red);
+            box-shadow: 0 0 30px var(--red-glow);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .risk-value { font-size: 1.5rem; font-weight: 800; color: var(--red); line-height: 1; }
+        .risk-label { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; margin-top: 0.25rem; }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-chip {
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .stat-chip.critical { color: var(--red); background: var(--red-glow); border-color: rgba(255, 0, 85, 0.3); }
+        .stat-chip.high { color: var(--orange); background: var(--orange-glow); border-color: rgba(255, 140, 0, 0.3); }
+        .stat-chip.medium { color: var(--yellow); background: var(--yellow-glow); border-color: rgba(255, 204, 0, 0.3); }
+        .stat-chip.low { color: var(--green); background: rgba(0, 255, 136, 0.1); border-color: rgba(0, 255, 136, 0.2); }
+        .stat-chip.info { color: var(--cyan); background: var(--cyan-glow); border-color: rgba(0, 243, 255, 0.2); }
+
+        /* Findings Grid */
+        .findings-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+
+        .finding-card {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .finding-card::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+        .finding-card.critical::after { background: var(--red); box-shadow: 0 0 15px var(--red-glow); }
+        .finding-card.high::after { background: var(--orange); box-shadow: 0 0 15px var(--orange-glow); }
+        .finding-card.medium::after { background: var(--yellow); box-shadow: 0 0 15px var(--yellow-glow); }
+        .finding-card.low::after { background: var(--green); box-shadow: 0 0 8px rgba(0,255,136,0.2); }
+        .finding-card.informational::after { background: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+
+        .finding-id { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem; display: block; }
+
+        .finding-severity { padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; display: inline-block; }
+        .critical .finding-severity { background: var(--red-glow); color: var(--red); }
+        .high .finding-severity { background: var(--orange-glow); color: var(--orange); }
+        .medium .finding-severity { background: var(--yellow-glow); color: var(--yellow); }
+        .low .finding-severity { background: rgba(0,255,136,0.1); color: var(--green); }
+        .informational .finding-severity { background: var(--cyan-glow); color: var(--cyan); }
+
+        .finding-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
+
+        .finding-meta {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .finding-meta span b { color: var(--text-muted); margin-right: 0.5rem; font-weight: 500; }
+
+        .finding-section { margin-bottom: 1.5rem; }
+        .finding-section h5 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+        /* Tables */
+        .table-container { width: 100%; overflow-x: auto; margin: 2rem 0; border-radius: 12px; border: 1px solid var(--border); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left; }
+        th { background: rgba(255, 255, 255, 0.05); padding: 1.25rem 1.5rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        td { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); color: var(--text-main); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+        /* Timeline / Attack Path */
+        .timeline { position: relative; padding-left: 3rem; }
+        .timeline::before { content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 1px; background: var(--border); }
+
+        .timeline-item { position: relative; margin-bottom: 3rem; }
+        .timeline-item::before { content: ''; position: absolute; left: -3rem; top: 0.5rem; width: 1rem; height: 1rem; background: var(--bg-deep); border: 2px solid var(--cyan); border-radius: 50%; box-shadow: 0 0 10px var(--cyan-glow); }
+
+        .timeline-step { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.5rem; display: block; }
+        .timeline-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .timeline-mitre { font-size: 0.75rem; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; margin-top: 0.5rem; }
+
+        /* Methodology cards */
+        .methodology-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 1rem; }
+        .methodology-card .phase-label { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--cyan); margin-bottom: 0.4rem; display: block; }
+        .methodology-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+
+        /* Utilities */
+        .accent-cyan { color: var(--cyan); }
+        .accent-red { color: var(--red); }
+        .mt-4 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+
+        ul.recommendation-list { padding-left: 1.5rem; margin-top: 0.75rem; }
+        ul.recommendation-list li { margin-bottom: 0.4rem; color: var(--text-muted); font-size: 0.95rem; }
+
+        .appendix-block { margin-bottom: 2rem; }
+        .appendix-block h4 { font-size: 1rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .appendix-block pre { white-space: pre-wrap; word-break: break-word; font-size: 0.8rem; color: var(--text-muted); line-height: 1.7; }
+
+        @media (max-width: 1024px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; padding: 1.5rem; }
+            .main-content { max-width: 100%; }
+            .section { padding: 4rem 2rem; }
+            .finding-card { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .sidebar { display: none; }
+            .main-content { max-width: 100%; }
+            body { background: white; color: black; }
+            .content-card, .finding-card { border: 1px solid #ddd; background: none; break-inside: avoid; }
+            .meta-item span, .main-title, td { color: black !important; -webkit-text-fill-color: black !important; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal { animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <span>Nightfall</span>
+            </div>
+
+            <ul class="nav-links">
+                <li class="nav-section-label">Overview</li>
+                <li class="nav-item"><a href="#summary" class="nav-link active">Executive Summary</a></li>
+                <li class="nav-item"><a href="#scope" class="nav-link">Scope & Details</a></li>
+
+                <li class="nav-section-label">Analysis</li>
+                <li class="nav-item"><a href="#methodology" class="nav-link">Methodology</a></li>
+                <li class="nav-item"><a href="#findings" class="nav-link">Technical Findings</a></li>
+                <li class="nav-item"><a href="#attack-path" class="nav-link">Attack Path</a></li>
+
+                <li class="nav-section-label">Remediation</li>
+                <li class="nav-item"><a href="#roadmap" class="nav-link">Remediation Roadmap</a></li>
+                <li class="nav-item"><a href="#appendices" class="nav-link">Appendices</a></li>
+            </ul>
+
+            <div class="meta-item mt-4" style="padding-left: 1rem;">
+                <label>Generated On</label>
+                <span style="font-size: 0.8rem;">2025-05-22</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Cover Section -->
+            <section class="section cover-section reveal" id="cover">
+                <div class="badge badge-confidential">CONFIDENTIAL</div>
+                <h1 class="main-title">Penetration Test Report — 192.168.50.70</h1>
+                <p class="meta-item"><span style="color: var(--text-muted); font-size: 1.2rem;">Internal Assessment Engagement</span></p>
+
+                <div class="metadata-grid">
+                    <div class="meta-item">
+                        <label>Target Infrastructure</label>
+                        <span>192.168.50.70</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>Lead Agent</label>
+                        <span>Automated Red Team Agent</span>
+                    </div>
+                    <div class="meta-item">
+                        <label>Risk Posture</label>
+                        <span class="accent-red">Critical</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Executive Summary -->
+            <section class="section reveal" id="summary" style="animation-delay: 0.1s;">
+                <div class="section-header">
+                    <span class="section-number">01</span>
+                    <h2 class="section-title">Executive Summary</h2>
+                </div>
+
+                <div class="content-card">
+                    <p>A penetration test was conducted against the internal host 190.168.50.70 to identify security vulnerabilities. The assessment involved active reconnaissance, port scanning, and service enumeration. The testing identified several critical-risk vulnerabilities, most notably an active root bindshell and a remote code execution vector via distccd.
+
+While the assessment concluded without a recorded successful foothold in the final phases, the discovery of highly critical services suggests that the host is significantly compromised at a service level. The presence of anonymous FTP access, exposed system configuration files, and unauthenticated shell access indicates a failure in basic security hardening.
+
+Key findings include the existence of a root-level bindshell on port 1524, the presence of an RCE vector on port 3632, and widespread information disclosure through Apache and PHP configurations. Total findings identified include 1 critical, 3 high, 1 medium, and 1 low severity issue.
+
+Immediate remediation is required. It is recommended to disable the root bindshell, patch the distccd service, disable anonymous FTP access, and implement strict access controls on SMB shares and web directory indexing.</p>
+
+                    <div class="risk-rating-container">
+                        <div class="risk-score">
+                            <span class="risk-value">Critical</span>
+                            <span class="risk-label">Overall Rating</span>
+                        </div>
+                        <div>
+                            <h4 class="mb-2">Assessment Justification</h4>
+                            <p style="font-size: 0.95rem; color: var(--text-muted);">The presence of an active root bindshell (port 1524) and a known RCE vector (distccd) provides immediate, unauthenticated access to the system.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4 class="mb-2">Finding Statistics</h4>
+                        <div class="stats-row">
+                            
+                            <span class="stat-chip critical">1 Critical</span>
+                            
+                            
+                            <span class="stat-chip high">3 High</span>
+                            
+                            
+                            <span class="stat-chip medium">1 Medium</span>
+                            
+                            
+                            <span class="stat-chip low">1 Low</span>
+                            
+                            
+                            <span class="stat-chip info">1 Informational</span>
+                            
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4 class="mb-2">Top Recommendations</h4>
+                        <ul class="recommendation-list">
+                            
+                            <li>Immediately disable the root bindshell on port 1524.</li>
+                            
+                            <li>Patch or remove the distccd service (port 3632) to prevent remote code execution.</li>
+                            
+                            <li>Disable anonymous FTP access on vsftpd and ProFTPD services.</li>
+                            
+                            <li>Disable directory indexing and remove sensitive files like phpinfo.php from the web server.</li>
+                            
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Scope -->
+            <section class="section reveal" id="scope" style="animation-delay: 0.2s;">
+                <div class="section-header">
+                    <span class="section-number">02</span>
+                    <h2 class="section-title">Scope & Engagement</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <tbody>
+                            <tr><th>Field</th><th>Value</th></tr>
+                            <tr><td>Target</td><td>192.168.50.70</td></tr>
+                            <tr><td>Phases Executed</td><td>Reconnaissance, Scanning &amp; Enumeration, Vulnerability Identification</td></tr>
+                            <tr><td>Tools Used</td><td>nmap, enum4linux, nikto</td></tr>
+                            <tr><td>Foothold Obtained</td><td>No</td></tr>
+                            <tr><td>Highest Privilege</td><td>N/A</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Methodology -->
+            <section class="section reveal" id="methodology" style="animation-delay: 0.3s;">
+                <div class="section-header">
+                    <span class="section-number">03</span>
+                    <h2 class="section-title">Methodology</h2>
+                </div>
+                <div class="findings-grid">
+                    
+                    <div class="methodology-card">
+                        <span class="phase-label">PHASE 1</span>
+                        <h4>Reconnaissance</h4>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">Conducted passive reconnaissance to identify target metadata. No external DNS records or public identifiers were found, confirming the target is an internal RFC 1918 host.</p>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <span class="phase-label">PHASE 2</span>
+                        <h4>Scanning &amp; Enumeration</h4>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">Performed active port scanning and service fingerprinting. Identified a wide array of open ports and services, including FTP, SSH, SMB, and a root bindshell.</p>
+                    </div>
+                    
+                    <div class="methodology-card">
+                        <span class="phase-label">PHASE 3</span>
+                        <h4>Vulnerability Identification</h4>
+                        <p style="color: var(--text-muted); font-size: 0.95rem;">Analyzed service banners and configurations to identify known vulnerabilities, including anonymous access, information disclosure, and RCE vectors.</p>
+                    </div>
+                    
+                </div>
+            </section>
+
+            <!-- Technical Findings -->
+            <section class="section reveal" id="findings" style="animation-delay: 0.4s;">
+                <div class="section-header">
+                    <span class="section-number">04</span>
+                    <h2 class="section-title">Technical Findings</h2>
+                </div>
+                <div class="findings-grid">
+                    
+                    <div class="finding-card critical">
+                        <div>
+                            <span class="finding-id">FINDING-001</span>
+                            <span class="finding-severity">Critical</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">Active Root Bindshell</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Port 1524/TCP (bindshell)</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>An active bindshell is running on port 1524, providing a direct root shell to the host.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>Port 1524 | TCP | bindshell | Metasploitable root shell | High Risk</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>An attacker can gain immediate, unauthenticated root-level access to the target system.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>Disable the service or close the port immediately.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="finding-card high">
+                        <div>
+                            <span class="finding-id">FINDING-002</span>
+                            <span class="finding-severity">High</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">Remote Code Execution Vector via distccd</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Port 3632/TCP (distccd)</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>The distccd service is running, which is a known vector for remote code execution.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>Port 3632 | TCP | distccd | distccd v1</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>An attacker could potentially execute arbitrary commands on the host.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>Disable or strictly restrict access to the distccd service.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="finding-card high">
+                        <div>
+                            <span class="finding-id">FINDING-003</span>
+                            <span class="finding-severity">High</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">Anonymous FTP Access Enabled</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Port 21/TCP (vsftpd 2.3.4)</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>Anonymous FTP login is enabled, allowing any user to access the FTP server without credentials.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>Port 21 | TCP | FTP | vsftrad 2.3.4 | Anonymous FTP allowed</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>Unauthorized users can download sensitive files or potentially upload malicious payloads.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>Disable anonymous authentication in the vsftpd and ProFTPD configurations.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="finding-card high">
+                        <div>
+                            <span class="finding-id">FINDING-004</span>
+                            <span class="finding-severity">High</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">SMB User Enumeration and Disabled Signing</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Port 139/445/TCP (Samba)</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>SMB signing is disabled, and local users can be enumerated via the service.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>User Enumeration: Extensive list of local users identified (e.g., root, msfadmin, www-data...); SMB signing is disabled (high risk for relay attacks).</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>Enables SMB relay attacks and provides attackers with a list of valid usernames for brute-forcing.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>Enable SMB signing and restrict user enumeration capabilities.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="finding-card medium">
+                        <div>
+                            <span class="finding-id">FINDING-005</span>
+                            <span class="finding-severity">Medium</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">Sensitive Information Disclosure via phpinfo.php</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Port 80/TCP (Apache/PHP)</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>The phpinfo.php file is publicly accessible, leaking detailed server and PHP configuration.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>Sensitive Files: phpinfo.php is publicly accessible (leaks system configuration).</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>Provides attackers with technical details necessary to craft targeted exploits.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>Remove phpinfo.php from the web root or restrict access via web server configuration.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="finding-card low">
+                        <div>
+                            <span class="finding-id">FINDING-006</span>
+                            <span class="finding-severity">Low</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">Web Directory Indexing Enabled</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Port 80/TCP (Apache)</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>Directory indexing is enabled for several directories, allowing users to browse the file structure.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>Directory Indexing: Enabled on /icons/, /doc/, and /test/.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>Allows attackers to discover files and directory structures that may contain sensitive information.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>Disable the &#39;Indexes&#39; option in the Apache configuration.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="finding-card informational">
+                        <div>
+                            <span class="finding-id">FINDING-007</span>
+                            <span class="finding-severity">Informational</span>
+                        </div>
+                        <div>
+                            <h3 class="finding-title">Host Operating System Identification</h3>
+                            <div class="finding-meta">
+                                <span><b>Component:</b>Target OS</span>
+                                <span><b>Phase:</b>2</span>
+                                
+                                
+                            </div>
+                            <div class="finding-section">
+                                <h5>Description</h5>
+                                <p>The target host was identified as running a Linux kernel.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Evidence</h5>
+                                <p>Detected OS: Linux (Kernel version identified via service fingerprinting)</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Impact</h5>
+                                <p>Reduces the search space for exploits during the reconnaissance phase.</p>
+                            </div>
+                            <div class="finding-section">
+                                <h5>Remediation</h5>
+                                <p>No remediation required for information disclosure.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+            <!-- Attack Path -->
+            <section class="section reveal" id="attack-path" style="animation-delay: 0.5s;">
+                <div class="section-header">
+                    <span class="section-number">05</span>
+                    <h2 class="section-title">Attack Path Narrative</h2>
+                </div>
+                <div class="content-card">
+                    <div class="timeline">
+                        
+                        <div class="timeline-item">
+                            <span class="timeline-step">STEP 1</span>
+                            <div class="timeline-title">Service Discovery</div>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Identified a wide range of open ports using active scanning.</p>
+                            
+                            <div class="timeline-mitre">T1046 — Network Service Scanning</div>
+                            
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <span class="timeline-step">STEP 2</span>
+                            <div class="timeline-title">Vulnerability Identification</div>
+                            <p style="color: var(--text-muted); font-size: 0.95rem;">Identified critical vulnerabilities including a root bindshell and RCE vectors during service enumeration.</p>
+                            
+                            <div class="timeline-mitre">T1595 — Active Scanning</div>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+            </section>
+
+            <!-- Credentials -->
+            
+
+            <!-- Remediation Roadmap -->
+            <section class="section reveal" id="roadmap" style="animation-delay: 0.6s;">
+                <div class="section-header">
+                    <span class="section-number">06</span>
+                    <h2 class="section-title">Remediation Roadmap</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Finding</th>
+                                <th>Severity</th>
+                                <th>Effort</th>
+                                <th>Priority</th>
+                                <th>Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td><code>FINDING-001</code></td>
+                                <td>Active Root Bindshell</td>
+                                <td>Critical</td>
+                                <td>Low</td>
+                                <td><strong>P1</strong></td>
+                                <td>SysAdmin</td>
+                            </tr>
+                            
+                            <tr>
+                                <td><code>FINDING-002</code></td>
+                                <td>Remote Code Execution Vector via distccd</td>
+                                <td>High</td>
+                                <td>Low</td>
+                                <td><strong>P1</strong></td>
+                                <td>SysAdmin</td>
+                            </tr>
+                            
+                            <tr>
+                                <td><code>FINDING-003</code></td>
+                                <td>Anonymous FTP Access Enabled</td>
+                                <td>High</td>
+                                <td>Low</td>
+                                <td><strong>P2</strong></td>
+                                <td>SysAdmin</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Appendices -->
+            <section class="section reveal" id="appendices" style="animation-delay: 0.7s;">
+                <div class="section-header">
+                    <span class="section-number">07</span>
+                    <h2 class="section-title">Appendices & Data</h2>
+                </div>
+                <div class="content-card">
+                    <div class="appendix-block">
+                        <h4>Appendix A — Reconnaissance Data (Phase 1)</h4>
+                        <pre>Target: 192.168.50.70 (Private/RFC 1918). No public DNS records found. Host is part of a local network.</pre>
+                    </div>
+                    <div class="appendix-block">
+                        <h4>Appendix B — Scan & Enumeration Results (Phase 2)</h4>
+                        <pre>Notable ports: 21 (FTP), 22 (SSH), 80 (HTTP), 139/445 (SMB), 1524 (Bindshell), 3632 (distccd), 8180 (Tomcat).</pre>
+                    </div>
+                    <div class="appendix-block">
+                        <h4>Appendix C — Identified Vulnerabilities (Phase 3)</h4>
+                        <pre>Critical: Port 1524 Root Shell; High: distccd RCE, vsftpd Anonymous, SMB User Enum; Medium: phpinfo exposure; Low: Directory Indexing.</pre>
+                    </div>
+                    <div class="appendix-block">
+                        <h4>Appendix D — Exploitation Attempts (Phase 4)</h4>
+                        <pre>No exploitation attempts were documented as successful in Phase 4 or 5.</pre>
+                    </div>
+                    <div class="appendix-block">
+                        <h4>Appendix E — Post-Exploitation Results (Phase 5)</h4>
+                        <pre>No post-exploitation activities were performed as no foothold was obtained.</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer style="padding: 4rem; text-align: center; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.8rem;">
+                <p>&copy; 2025 Nightfall Security Assessment Portfolio. Generated by Automated Red Team Agent.</p>
+                <p class="mt-4">CONFIDENTIAL - INTERNAL USE ONLY</p>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.3 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('id');
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${id}`) link.classList.add('active');
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section').forEach(section => observer.observe(section));
+
+        document.querySelectorAll('.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>

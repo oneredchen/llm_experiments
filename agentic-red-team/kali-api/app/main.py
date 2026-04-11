@@ -6,8 +6,14 @@ import sys
 import uvicorn
 from fastapi import FastAPI
 
-from routers.tools import router as tools_router
 from routers.health import router as health_router
+from routers.recon import router as recon_router
+from routers.web import router as web_router
+from routers.exploitation import router as exploitation_router
+from routers.credentials import router as credentials_router
+from routers.post_exploit import router as post_exploit_router
+from routers.jobs import router as jobs_router
+from routers.files import router as files_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,8 +27,14 @@ DEBUG_MODE = os.environ.get("DEBUG_MODE", "0").lower() in ("1", "true", "yes", "
 
 app = FastAPI(title="Kali Linux Tools API")
 
-app.include_router(tools_router)
 app.include_router(health_router)
+app.include_router(recon_router)
+app.include_router(web_router)
+app.include_router(exploitation_router)
+app.include_router(credentials_router)
+app.include_router(post_exploit_router)
+app.include_router(jobs_router)
+app.include_router(files_router)
 
 
 @app.get("/")

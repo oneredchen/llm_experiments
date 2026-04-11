@@ -195,17 +195,277 @@ async def enum4linux(target: str, additional_args: str = "-a") -> str:
     return await _api_post("/api/tools/enum4linux", {"target": target, "additional_args": additional_args})
 
 
+@tool
+async def start_job(command: str, timeout: int = 300) -> str:
+    """Start a long-running command as a background job on the Kali machine.
+    Returns a job_id. Poll with get_job(job_id) to check status and retrieve output.
+    Use this instead of run_command for tools that take more than ~30 seconds
+    (e.g. full-port nmap scans, hydra wordlist attacks, sqlmap deep scans)."""
+    return await _api_post("/api/jobs", {"command": command, "timeout": timeout})
+
+
+@tool
+async def get_job(job_id: str) -> str:
+    """Get the status and output of a background job started with start_job.
+    Status values: pending | running | done | failed | cancelled.
+    Poll every 15-30 seconds until status is done/failed/cancelled."""
+    try:
+        async with _client() as c:
+            r = await c.get(f"/api/jobs/{job_id}")
+            r.raise_for_status()
+            data = r.json()
+            parts = [f"status: {data['status']}"]
+            if data.get("timed_out"):
+                parts.append(f"[TIMED OUT — partial results below]")
+            if data.get("stdout"):
+                parts.append(data["stdout"])
+            if data.get("stderr"):
+                parts.append(f"[stderr]\n{data['stderr']}")
+            if data.get("completed_at"):
+                parts.append(f"completed_at: {data['completed_at']}")
+            return "\n".join(parts)
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def cancel_job(job_id: str) -> str:
+    """Cancel a running or pending background job."""
+    try:
+        async with _client() as c:
+            r = await c.delete(f"/api/jobs/{job_id}")
+            r.raise_for_status()
+            return str(r.json())
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def list_jobs() -> str:
+    """List all background jobs and their current status."""
+    try:
+        async with _client() as c:
+            r = await c.get("/api/jobs")
+            r.raise_for_status()
+            jobs = r.json()
+            if not jobs:
+                return "No jobs found."
+            lines = [f"{j['job_id']} | {j['status']:10} | {j['command'][:60]}" for j in jobs]
+            return "\n".join(lines)
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def read_file(path: str) -> str:
+    """Read the content of a file from the Kali machine.
+    path: absolute path (e.g. /root/.msf4/loot/hash.txt) or relative to loot directory.
+    Returns file content as text. Binary files are returned as base64."""
+    try:
+        async with _client() as c:
+            r = await c.get("/api/files/read", params={"path": path})
+            r.raise_for_status()
+            data = r.json()
+            if data.get("encoding") == "base64":
+                return f"[binary file — base64]\n{data['content']}"
+            return data["content"]
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def list_files(path: str = "") -> str:
+    """List files and directories at a path on the Kali machine.
+    path: absolute path or relative to loot directory (defaults to loot directory root).
+    Useful for browsing Metasploit loot (/root/.msf4/loot/) or captured files."""
+    try:
+        async with _client() as c:
+            r = await c.get("/api/files/list", params={"path": path})
+            r.raise_for_status()
+            data = r.json()
+            lines = [f"  {e['type'][0].upper()}  {e['name']}" + (f"  ({e['size']} bytes)" if e["size"] is not None else "") for e in data["entries"]]
+            return f"{data['path']}/\n" + ("\n".join(lines) if lines else "  (empty)")
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def masscan(target: str, ports: str = "0-65535", rate: int = 1000, additional_args: str = "") -> str:
+    """Fast port discovery across large port ranges. Use before nmap to find open ports quickly,
+    then run nmap -sCV only against the discovered ports.
+    rate: packets/sec — keep ≤1000 on shared networks to avoid drops."""
+    return await _api_post("/api/tools/masscan", {"target": target, "ports": ports, "rate": rate, "additional_args": additional_args})
+
+
+@tool
+async def searchsploit(query: str, additional_args: str = "") -> str:
+    """Search ExploitDB for known public exploits matching a service name or version string.
+    query: e.g. 'vsftpd 2.3.4', 'Apache 2.2', 'Samba 3.0.20', 'ProFTPD 1.3.1'"""
+    return await _api_post("/api/tools/searchsploit", {"query": query, "additional_args": additional_args})
+
+
+@tool
+async def whatweb(target: str, aggression: int = 1, additional_args: str = "") -> str:
+    """Fingerprint web technologies, CMS, JavaScript frameworks, and server headers.
+    aggression: 1=passive/stealthy, 3=aggressive (more requests), 4=heavy."""
+    return await _api_post("/api/tools/whatweb", {"target": target, "aggression": aggression, "additional_args": additional_args})
+
+
+@tool
+async def sslscan(target: str, additional_args: str = "") -> str:
+    """Scan SSL/TLS configuration for weak ciphers, expired certificates, and known vulnerabilities
+    (POODLE, Heartbleed, BEAST, CRIME). target: host or host:port."""
+    return await _api_post("/api/tools/sslscan", {"target": target, "additional_args": additional_args})
+
+
+@tool
+async def msfvenom(
+    payload: str,
+    lhost: str = "",
+    lport: int = 4444,
+    format: str = "elf",
+    output: str = "/tmp/kali-loot/payload",
+    additional_args: str = "",
+) -> str:
+    """Generate a standalone payload with msfvenom, saved to the loot directory.
+    payload: e.g. 'linux/x86/meterpreter/reverse_tcp', 'windows/x64/meterpreter/reverse_tcp'.
+    format: elf (Linux), exe (Windows), py, raw, etc.
+    Returns the path to the generated file."""
+    return await _api_post("/api/tools/msfvenom", {
+        "payload": payload, "lhost": lhost, "lport": lport,
+        "format": format, "output": output, "additional_args": additional_args,
+    })
+
+
+@tool
+async def hashcat(
+    hash_file: str,
+    wordlist: str = "/usr/share/wordlists/rockyou.txt",
+    hash_type: int = 0,
+    attack_mode: int = 0,
+    additional_args: str = "",
+) -> str:
+    """GPU-accelerated password cracking. Faster than john for NTLM and modern hashes.
+    hash_type: 0=MD5, 100=SHA1, 1000=NTLM, 1800=sha512crypt, 3200=bcrypt.
+    attack_mode: 0=dictionary, 3=brute-force mask."""
+    return await _api_post("/api/tools/hashcat", {
+        "hash_file": hash_file, "wordlist": wordlist,
+        "hash_type": hash_type, "attack_mode": attack_mode, "additional_args": additional_args,
+    })
+
+
+@tool
+async def crackmapexec(
+    protocol: str,
+    target: str,
+    username: str = "",
+    username_file: str = "",
+    password: str = "",
+    password_file: str = "",
+    additional_args: str = "",
+) -> str:
+    """Validate credentials and enumerate accessible services via netexec (nxc).
+    protocol: smb | ssh | winrm | ldap | rdp | ftp.
+    Use after hydra to confirm working credentials, check share access, or spray passwords.
+    additional_args examples: '--shares' (list SMB shares), '--sam' (dump SAM), '--users'."""
+    return await _api_post("/api/tools/crackmapexec", {
+        "protocol": protocol, "target": target,
+        "username": username, "username_file": username_file,
+        "password": password, "password_file": password_file,
+        "additional_args": additional_args,
+    })
+
+
+@tool
+async def smbclient(
+    target: str,
+    share: str,
+    username: str = "",
+    password: str = "",
+    command: str = "ls",
+    additional_args: str = "",
+) -> str:
+    """Access an SMB share and run a single command.
+    command examples: 'ls', 'get filename', 'put localfile remotefile', 'recurse ON; ls'.
+    Leave username/password empty for anonymous access."""
+    return await _api_post("/api/tools/smbclient", {
+        "target": target, "share": share, "username": username,
+        "password": password, "command": command, "additional_args": additional_args,
+    })
+
+
+@tool
+async def impacket(
+    tool: str,
+    target: str,
+    username: str = "",
+    password: str = "",
+    domain: str = "",
+    hash: str = "",
+    additional_args: str = "",
+) -> str:
+    """Run an Impacket tool for Windows/AD attacks.
+    tool: secretsdump | psexec | smbexec | GetNPUsers | GetUserSPNs.
+    hash: NTLM hash for pass-the-hash in LM:NT format (e.g. aad3b435b51404eeaad3b435b51404ee:hash).
+    secretsdump: dumps SAM/NTDS hashes. psexec/smbexec: remote command execution.
+    GetNPUsers: find AS-REP roastable accounts. GetUserSPNs: find Kerberoastable accounts."""
+    return await _api_post("/api/tools/impacket", {
+        "tool": tool, "target": target, "username": username,
+        "password": password, "domain": domain, "hash": hash,
+        "additional_args": additional_args,
+    })
+
+
+@tool
+async def linpeas(target_os: str = "linux") -> str:
+    """Stage linpeas (Linux) or winpeas (Windows) in the loot directory for upload to a target.
+    Returns the staged file path. Upload to the target with Metasploit:
+      use post/multi/manage/upload; set SESSION <id>; set SRC <path>; set DEST /tmp/; run
+    Then execute: post/multi/manage/shell_to_meterpreter → shell → chmod +x /tmp/linpeas.sh && /tmp/linpeas.sh"""
+    return await _api_post("/api/tools/linpeas", {"target_os": target_os})
+
+
 def get_tools() -> list:
     return [
+        # Recon
         run_command,
         nmap,
+        masscan,
+        searchsploit,
+        whatweb,
+        sslscan,
+        # Web
         gobuster,
         dirb,
         nikto,
         sqlmap,
+        wpscan,
+        # Exploitation
         metasploit,
+        msfvenom,
+        # Credentials
         hydra,
         john,
-        wpscan,
+        hashcat,
+        crackmapexec,
+        # Post-exploitation
         enum4linux,
+        smbclient,
+        impacket,
+        linpeas,
+        # Jobs & files
+        start_job,
+        get_job,
+        cancel_job,
+        list_jobs,
+        read_file,
+        list_files,
     ]

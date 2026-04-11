@@ -1,10 +1,16 @@
+import argparse
 import asyncio
 import logging
 import sys
 from datetime import datetime
 from pathlib import Path
 
+from jinja2 import Environment, FileSystemLoader
+
+from agent.report import PenTestReport
 from agent.workflow import run_workflow
+
+logger = logging.getLogger("main")
 
 
 def setup_logging() -> None:
@@ -38,17 +44,71 @@ def setup_logging() -> None:
     logging.getLogger("agent").info("Logging initialised — writing to %s", log_file)
 
 
-TARGET = "192.168.50.70"
+def render_report(report: PenTestReport) -> Path:
+    env = Environment(loader=FileSystemLoader("template"), autoescape=True)
+    template = env.get_template("report.html")
+    html = template.render(report=report)
+
+    report_dir = Path("reports")
+    report_dir.mkdir(exist_ok=True)
+    safe_target = report.target.replace(".", "_")
+    output_path = report_dir / f"{safe_target}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    output_path.write_text(html, encoding="utf-8")
+    return output_path
+
+
+async def run_target(target: str, semaphore: asyncio.Semaphore) -> tuple[str, Path | None, Exception | None]:
+    """Run a single target's workflow behind a concurrency semaphore."""
+    async with semaphore:
+        logger.info("Starting engagement: %s", target)
+        try:
+            report = await run_workflow(target)
+            path = render_report(report)
+            logger.info("Engagement complete: %s → %s", target, path)
+            return (target, path, None)
+        except Exception as e:
+            logger.error("Engagement failed: %s — %s: %s", target, type(e).__name__, e)
+            return (target, None, e)
 
 
 async def main():
+    parser = argparse.ArgumentParser(description="Red Team Agent — multi-target engagement")
+    parser.add_argument(
+        "targets",
+        nargs="+",
+        help="One or more target IPs or hostnames",
+    )
+    parser.add_argument(
+        "-c", "--concurrency",
+        type=int,
+        default=2,
+        help="Max concurrent engagements (default: 2)",
+    )
+    args = parser.parse_args()
+
     setup_logging()
-    print(f"Starting red team engagement against {TARGET}")
-    report = await run_workflow(TARGET)
-    print("\n" + "=" * 60)
-    print("FINAL REPORT")
-    print("=" * 60)
-    print(report)
+
+    targets = args.targets
+    semaphore = asyncio.Semaphore(args.concurrency)
+
+    logger.info(
+        "Launching %d engagement(s) with concurrency=%d: %s",
+        len(targets), args.concurrency, ", ".join(targets),
+    )
+
+    results = await asyncio.gather(
+        *[run_target(t, semaphore) for t in targets]
+    )
+
+    print(f"\n{'=' * 60}")
+    print("ENGAGEMENT SUMMARY")
+    print(f"{'=' * 60}")
+    for target, path, error in results:
+        if error:
+            print(f"  FAIL  {target} — {type(error).__name__}: {error}")
+        else:
+            print(f"  OK    {target} → {path}")
+    print(f"{'=' * 60}")
 
 
 if __name__ == "__main__":
