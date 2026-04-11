@@ -9,10 +9,6 @@ class CommandRequest(BaseModel):
     command: str
 
 
-class StartJobRequest(BaseModel):
-    command: str
-    timeout: int = 300
-
 
 class NmapRequest(BaseModel):
     target: str

@@ -65,12 +65,16 @@ async def _api_post(endpoint: str, payload: dict[str, Any]) -> str:
         return msg
 
 
+# ──────────────────────────────────────────────────────────────────────
+# Recon Tools  (kali-api: routers/recon.py — prefix /api/tools)
+# ──────────────────────────────────────────────────────────────────────
+
 @tool
 async def run_command(command: str) -> str:
     """Run an arbitrary non-interactive shell command on the Kali machine.
-    Only use for commands that exit on their own (curl, searchsploit, etc.).
+    Only use for commands that exit on their own (curl, dig, whois, etc.).
     Never use nc, netcat, or anything that opens an interactive session."""
-    return await _api_post("/api/command", {"command": command})
+    return await _api_post("/api/tools/command", {"command": command})
 
 
 @tool
@@ -89,6 +93,39 @@ async def nmap(
         {"target": target, "scan_type": scan_type, "ports": ports, "additional_args": additional_args},
     )
 
+
+@tool
+async def masscan(target: str, ports: str = "0-65535", rate: int = 1000, additional_args: str = "") -> str:
+    """Fast port discovery across large port ranges. Use before nmap to find open ports quickly,
+    then run nmap -sCV only against the discovered ports.
+    rate: packets/sec — keep ≤1000 on shared networks to avoid drops."""
+    return await _api_post("/api/tools/masscan", {"target": target, "ports": ports, "rate": rate, "additional_args": additional_args})
+
+
+@tool
+async def searchsploit(query: str, additional_args: str = "") -> str:
+    """Search ExploitDB for known public exploits matching a service name or version string.
+    query: e.g. 'vsftpd 2.3.4', 'Apache 2.2', 'Samba 3.0.20', 'ProFTPD 1.3.1'"""
+    return await _api_post("/api/tools/searchsploit", {"query": query, "additional_args": additional_args})
+
+
+@tool
+async def whatweb(target: str, aggression: int = 1, additional_args: str = "") -> str:
+    """Fingerprint web technologies, CMS, JavaScript frameworks, and server headers.
+    aggression: 1=passive/stealthy, 3=aggressive (more requests), 4=heavy."""
+    return await _api_post("/api/tools/whatweb", {"target": target, "aggression": aggression, "additional_args": additional_args})
+
+
+@tool
+async def sslscan(target: str, additional_args: str = "") -> str:
+    """Scan SSL/TLS configuration for weak ciphers, expired certificates, and known vulnerabilities
+    (POODLE, Heartbleed, BEAST, CRIME). target: host or host:port."""
+    return await _api_post("/api/tools/sslscan", {"target": target, "additional_args": additional_args})
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Web Tools  (kali-api: routers/web.py — prefix /api/tools)
+# ──────────────────────────────────────────────────────────────────────
 
 @tool
 async def gobuster(
@@ -132,6 +169,16 @@ async def sqlmap(url: str, data: str = "", additional_args: str = "") -> str:
 
 
 @tool
+async def wpscan(url: str, additional_args: str = "") -> str:
+    """Run WPScan WordPress vulnerability scanner against a URL."""
+    return await _api_post("/api/tools/wpscan", {"url": url, "additional_args": additional_args})
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Exploitation Tools  (kali-api: routers/exploitation.py — prefix /api/tools)
+# ──────────────────────────────────────────────────────────────────────
+
+@tool
 async def metasploit(module: str, options: dict[str, Any] = {}) -> str:
     """Run a Metasploit module non-interactively.
     module: full module path e.g. 'exploit/unix/irc/unreal_ircd_3281_backdoor'.
@@ -139,6 +186,29 @@ async def metasploit(module: str, options: dict[str, Any] = {}) -> str:
     Use this instead of nc/netcat for any exploit that requires a shell connection."""
     return await _api_post("/api/tools/metasploit", {"module": module, "options": options})
 
+
+@tool
+async def msfvenom(
+    payload: str,
+    lhost: str = "",
+    lport: int = 4444,
+    format: str = "elf",
+    output: str = "/tmp/kali-loot/payload",
+    additional_args: str = "",
+) -> str:
+    """Generate a standalone payload with msfvenom, saved to the loot directory.
+    payload: e.g. 'linux/x86/meterpreter/reverse_tcp', 'windows/x64/meterpreter/reverse_tcp'.
+    format: elf (Linux), exe (Windows), py, raw, etc.
+    Returns the path to the generated file."""
+    return await _api_post("/api/tools/msfvenom", {
+        "payload": payload, "lhost": lhost, "lport": lport,
+        "format": format, "output": output, "additional_args": additional_args,
+    })
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Credential Tools  (kali-api: routers/credentials.py — prefix /api/tools)
+# ──────────────────────────────────────────────────────────────────────
 
 @tool
 async def hydra(
@@ -184,168 +254,6 @@ async def john(
 
 
 @tool
-async def wpscan(url: str, additional_args: str = "") -> str:
-    """Run WPScan WordPress vulnerability scanner against a URL."""
-    return await _api_post("/api/tools/wpscan", {"url": url, "additional_args": additional_args})
-
-
-@tool
-async def enum4linux(target: str, additional_args: str = "-a") -> str:
-    """Run enum4linux SMB/NetBIOS enumeration against a target."""
-    return await _api_post("/api/tools/enum4linux", {"target": target, "additional_args": additional_args})
-
-
-@tool
-async def start_job(command: str, timeout: int = 300) -> str:
-    """Start a long-running command as a background job on the Kali machine.
-    Returns a job_id. Poll with get_job(job_id) to check status and retrieve output.
-    Use this instead of run_command for tools that take more than ~30 seconds
-    (e.g. full-port nmap scans, hydra wordlist attacks, sqlmap deep scans)."""
-    return await _api_post("/api/jobs", {"command": command, "timeout": timeout})
-
-
-@tool
-async def get_job(job_id: str) -> str:
-    """Get the status and output of a background job started with start_job.
-    Status values: pending | running | done | failed | cancelled.
-    Poll every 15-30 seconds until status is done/failed/cancelled."""
-    try:
-        async with _client() as c:
-            r = await c.get(f"/api/jobs/{job_id}")
-            r.raise_for_status()
-            data = r.json()
-            parts = [f"status: {data['status']}"]
-            if data.get("timed_out"):
-                parts.append(f"[TIMED OUT — partial results below]")
-            if data.get("stdout"):
-                parts.append(data["stdout"])
-            if data.get("stderr"):
-                parts.append(f"[stderr]\n{data['stderr']}")
-            if data.get("completed_at"):
-                parts.append(f"completed_at: {data['completed_at']}")
-            return "\n".join(parts)
-    except httpx.HTTPStatusError as e:
-        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
-    except Exception as e:
-        return f"TOOL ERROR: {type(e).__name__}: {e}"
-
-
-@tool
-async def cancel_job(job_id: str) -> str:
-    """Cancel a running or pending background job."""
-    try:
-        async with _client() as c:
-            r = await c.delete(f"/api/jobs/{job_id}")
-            r.raise_for_status()
-            return str(r.json())
-    except httpx.HTTPStatusError as e:
-        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
-    except Exception as e:
-        return f"TOOL ERROR: {type(e).__name__}: {e}"
-
-
-@tool
-async def list_jobs() -> str:
-    """List all background jobs and their current status."""
-    try:
-        async with _client() as c:
-            r = await c.get("/api/jobs")
-            r.raise_for_status()
-            jobs = r.json()
-            if not jobs:
-                return "No jobs found."
-            lines = [f"{j['job_id']} | {j['status']:10} | {j['command'][:60]}" for j in jobs]
-            return "\n".join(lines)
-    except Exception as e:
-        return f"TOOL ERROR: {type(e).__name__}: {e}"
-
-
-@tool
-async def read_file(path: str) -> str:
-    """Read the content of a file from the Kali machine.
-    path: absolute path (e.g. /root/.msf4/loot/hash.txt) or relative to loot directory.
-    Returns file content as text. Binary files are returned as base64."""
-    try:
-        async with _client() as c:
-            r = await c.get("/api/files/read", params={"path": path})
-            r.raise_for_status()
-            data = r.json()
-            if data.get("encoding") == "base64":
-                return f"[binary file — base64]\n{data['content']}"
-            return data["content"]
-    except httpx.HTTPStatusError as e:
-        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
-    except Exception as e:
-        return f"TOOL ERROR: {type(e).__name__}: {e}"
-
-
-@tool
-async def list_files(path: str = "") -> str:
-    """List files and directories at a path on the Kali machine.
-    path: absolute path or relative to loot directory (defaults to loot directory root).
-    Useful for browsing Metasploit loot (/root/.msf4/loot/) or captured files."""
-    try:
-        async with _client() as c:
-            r = await c.get("/api/files/list", params={"path": path})
-            r.raise_for_status()
-            data = r.json()
-            lines = [f"  {e['type'][0].upper()}  {e['name']}" + (f"  ({e['size']} bytes)" if e["size"] is not None else "") for e in data["entries"]]
-            return f"{data['path']}/\n" + ("\n".join(lines) if lines else "  (empty)")
-    except httpx.HTTPStatusError as e:
-        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
-    except Exception as e:
-        return f"TOOL ERROR: {type(e).__name__}: {e}"
-
-
-@tool
-async def masscan(target: str, ports: str = "0-65535", rate: int = 1000, additional_args: str = "") -> str:
-    """Fast port discovery across large port ranges. Use before nmap to find open ports quickly,
-    then run nmap -sCV only against the discovered ports.
-    rate: packets/sec — keep ≤1000 on shared networks to avoid drops."""
-    return await _api_post("/api/tools/masscan", {"target": target, "ports": ports, "rate": rate, "additional_args": additional_args})
-
-
-@tool
-async def searchsploit(query: str, additional_args: str = "") -> str:
-    """Search ExploitDB for known public exploits matching a service name or version string.
-    query: e.g. 'vsftpd 2.3.4', 'Apache 2.2', 'Samba 3.0.20', 'ProFTPD 1.3.1'"""
-    return await _api_post("/api/tools/searchsploit", {"query": query, "additional_args": additional_args})
-
-
-@tool
-async def whatweb(target: str, aggression: int = 1, additional_args: str = "") -> str:
-    """Fingerprint web technologies, CMS, JavaScript frameworks, and server headers.
-    aggression: 1=passive/stealthy, 3=aggressive (more requests), 4=heavy."""
-    return await _api_post("/api/tools/whatweb", {"target": target, "aggression": aggression, "additional_args": additional_args})
-
-
-@tool
-async def sslscan(target: str, additional_args: str = "") -> str:
-    """Scan SSL/TLS configuration for weak ciphers, expired certificates, and known vulnerabilities
-    (POODLE, Heartbleed, BEAST, CRIME). target: host or host:port."""
-    return await _api_post("/api/tools/sslscan", {"target": target, "additional_args": additional_args})
-
-
-@tool
-async def msfvenom(
-    payload: str,
-    lhost: str = "",
-    lport: int = 4444,
-    format: str = "elf",
-    output: str = "/tmp/kali-loot/payload",
-    additional_args: str = "",
-) -> str:
-    """Generate a standalone payload with msfvenom, saved to the loot directory.
-    payload: e.g. 'linux/x86/meterpreter/reverse_tcp', 'windows/x64/meterpreter/reverse_tcp'.
-    format: elf (Linux), exe (Windows), py, raw, etc.
-    Returns the path to the generated file."""
-    return await _api_post("/api/tools/msfvenom", {
-        "payload": payload, "lhost": lhost, "lport": lport,
-        "format": format, "output": output, "additional_args": additional_args,
-    })
-
-
-@tool
 async def hashcat(
     hash_file: str,
     wordlist: str = "/usr/share/wordlists/rockyou.txt",
@@ -382,6 +290,16 @@ async def crackmapexec(
         "password": password, "password_file": password_file,
         "additional_args": additional_args,
     })
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Post-Exploitation Tools  (kali-api: routers/post_exploit.py — prefix /api/tools)
+# ──────────────────────────────────────────────────────────────────────
+
+@tool
+async def enum4linux(target: str, additional_args: str = "-a") -> str:
+    """Run enum4linux SMB/NetBIOS enumeration against a target."""
+    return await _api_post("/api/tools/enum4linux", {"target": target, "additional_args": additional_args})
 
 
 @tool
@@ -433,39 +351,124 @@ async def linpeas(target_os: str = "linux") -> str:
     return await _api_post("/api/tools/linpeas", {"target_os": target_os})
 
 
+# ──────────────────────────────────────────────────────────────────────
+# File Management  (kali-api: routers/files.py — prefix /api/files)
+# ──────────────────────────────────────────────────────────────────────
+
+@tool
+async def read_file(path: str) -> str:
+    """Read the content of a file from the Kali machine.
+    path: absolute path (e.g. /root/.msf4/loot/hash.txt) or relative to loot directory.
+    Returns file content as text. Binary files are returned as base64."""
+    try:
+        async with _client() as c:
+            r = await c.get("/api/files/read", params={"path": path})
+            r.raise_for_status()
+            data = r.json()
+            if data.get("encoding") == "base64":
+                return f"[binary file — base64]\n{data['content']}"
+            return data["content"]
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def list_files(path: str = "") -> str:
+    """List files and directories at a path on the Kali machine.
+    path: absolute path or relative to loot directory (defaults to loot directory root).
+    Useful for browsing Metasploit loot (/root/.msf4/loot/) or captured files."""
+    try:
+        async with _client() as c:
+            r = await c.get("/api/files/list", params={"path": path})
+            r.raise_for_status()
+            data = r.json()
+            lines = [f"  {e['type'][0].upper()}  {e['name']}" + (f"  ({e['size']} bytes)" if e["size"] is not None else "") for e in data["entries"]]
+            return f"{data['path']}/\n" + ("\n".join(lines) if lines else "  (empty)")
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def upload_file(local_path: str, dest_path: str = "") -> str:
+    """Upload a file from the Kali machine's local filesystem to the loot directory.
+    local_path: absolute path to the file on the Kali machine to read and upload.
+    dest_path: optional subdirectory/filename within the loot directory (e.g. 'wordlists/custom.txt').
+    If dest_path is empty, the original filename is used."""
+    try:
+        async with _client() as c:
+            # Read the file content first, then upload via multipart
+            read_resp = await c.get("/api/files/read", params={"path": local_path})
+            read_resp.raise_for_status()
+            data = read_resp.json()
+            content = data["content"].encode("utf-8")
+
+            files = {"file": (local_path.split("/")[-1], content)}
+            r = await c.post("/api/files/upload", files=files, data={"path": dest_path} if dest_path else {})
+            r.raise_for_status()
+            result = r.json()
+            return f"Uploaded to: {result['path']} ({result['size']} bytes)"
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+@tool
+async def delete_file(path: str) -> str:
+    """Delete a file from the loot directory on the Kali machine.
+    path: relative path within the loot directory.
+    Use for cleanup after extracting sensitive data."""
+    try:
+        async with _client() as c:
+            r = await c.request("DELETE", "/api/files", params={"path": path})
+            r.raise_for_status()
+            result = r.json()
+            return f"Deleted: {result['deleted']}"
+    except httpx.HTTPStatusError as e:
+        return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
+    except Exception as e:
+        return f"TOOL ERROR: {type(e).__name__}: {e}"
+
+
+# ──────────────────────────────────────────────────────────────────────
+# Tool Registry
+# ──────────────────────────────────────────────────────────────────────
+
 def get_tools() -> list:
     return [
-        # Recon
+        # Recon  (routers/recon.py)
         run_command,
         nmap,
         masscan,
         searchsploit,
         whatweb,
         sslscan,
-        # Web
+        # Web  (routers/web.py)
         gobuster,
         dirb,
         nikto,
         sqlmap,
         wpscan,
-        # Exploitation
+        # Exploitation  (routers/exploitation.py)
         metasploit,
         msfvenom,
-        # Credentials
+        # Credentials  (routers/credentials.py)
         hydra,
         john,
         hashcat,
         crackmapexec,
-        # Post-exploitation
+        # Post-exploitation  (routers/post_exploit.py)
         enum4linux,
         smbclient,
         impacket,
         linpeas,
-        # Jobs & files
-        start_job,
-        get_job,
-        cancel_job,
-        list_jobs,
+        # Files  (routers/files.py)
         read_file,
         list_files,
+        upload_file,
+        delete_file,
     ]

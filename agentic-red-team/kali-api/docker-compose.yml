@@ -3,7 +3,7 @@ services:
     build: .
     container_name: kali-api
     ports:
-      - "3000:3000"
+      - "192.168.50.21:3000:3000"
     environment:
       - API_PORT=3000
       - COMMAND_TIMEOUT=600

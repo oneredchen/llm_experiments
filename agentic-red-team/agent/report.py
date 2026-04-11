@@ -1,12 +1,12 @@
-from typing import Literal
-from pydantic import BaseModel, Field
+from typing import Annotated, Literal, Union
+from pydantic import BaseModel, BeforeValidator, Field
 
 
 class Finding(BaseModel):
     id: str = Field(description="e.g. FINDING-001")
     title: str
     severity: Literal["Critical", "High", "Medium", "Low", "Informational"]
-    cvss_score: str | None = None
+    cvss_score: Annotated[str | None, BeforeValidator(lambda v: str(v) if v is not None else None)] = None
     cves: list[str] = Field(default_factory=list)
     affected_component: str
     discovered_in_phase: int

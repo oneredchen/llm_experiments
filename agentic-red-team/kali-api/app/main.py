@@ -12,7 +12,6 @@ from routers.web import router as web_router
 from routers.exploitation import router as exploitation_router
 from routers.credentials import router as credentials_router
 from routers.post_exploit import router as post_exploit_router
-from routers.jobs import router as jobs_router
 from routers.files import router as files_router
 
 logging.basicConfig(
@@ -33,7 +32,6 @@ app.include_router(web_router)
 app.include_router(exploitation_router)
 app.include_router(credentials_router)
 app.include_router(post_exploit_router)
-app.include_router(jobs_router)
 app.include_router(files_router)
 
 
