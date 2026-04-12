@@ -17,7 +17,7 @@ class OllamaSettings(BaseSettings):
 
 class AgentSettings(BaseSettings):
     max_iterations: int = 15
-    num_ctx: int = 65536
+    num_ctx: int = 32768
     temperature: float = 1
     max_concurrent_llm_requests: int = 8  # global cap across all articles
     tool_timeout: int = 600

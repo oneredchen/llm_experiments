@@ -27,7 +27,7 @@ def generic_command(req: CommandRequest):
     try:
         if not req.command:
             raise HTTPException(status_code=400, detail="command is required")
-        return execute_command(req.command)
+        return execute_command(req.command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -47,7 +47,7 @@ def nmap(req: NmapRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
         command.append(req.target)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -64,7 +64,7 @@ def masscan(req: MasscanRequest):
         command = ["masscan", req.target, "-p", req.ports, "--rate", str(req.rate)]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -81,7 +81,7 @@ def searchsploit(req: SearchsploitRequest):
         command = ["searchsploit", "--color=never"] + shlex.split(req.query)
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -98,7 +98,7 @@ def whatweb(req: WhatwebRequest):
         command = ["whatweb", f"--aggression={req.aggression}", req.target]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -116,7 +116,7 @@ def sslscan(req: SslscanRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
         command.append(req.target)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:

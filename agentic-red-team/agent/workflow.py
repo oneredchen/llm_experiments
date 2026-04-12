@@ -29,18 +29,18 @@ from agent.report import PenTestReport
 logger = logging.getLogger("agent.workflow")
 
 _MAX_RETRIES = 2
-_MIN_OUTPUT_CHARS = 200
 _MAX_FEEDBACK_LOOPS = 2
+_MAX_PHASE2_RETRIES = 3
 
-# Markers that indicate a phase produced real structured output, not filler.
-_PHASE_OUTPUT_MARKERS: dict[int, list[str]] = {
-    1: ["Phase 1 Findings", "host metadata", "entry points"],
-    2: ["Phase 2 Findings", "open port", "service"],
-    3: ["Phase 3 Findings", "CVE", "vulnerability", "severity"],
-    4: ["Phase 4 Findings", "exploit", "foothold"],
-    5: ["Phase 5 Findings", "privilege", "enumeration"],
-    6: ['"title"', '"findings"', '"executive_summary"'],
-}
+# Patterns that indicate Phase 2 produced actual scan results, not just a plan.
+_PHASE2_SCAN_EVIDENCE = re.compile(
+    r"(\d+/(tcp|udp)\s+(open|closed|filtered))"  # nmap port line: 80/tcp open
+    r"|(\bopen\s+port\b)"                         # "open port" phrase with data
+    r"|(PORT\s+STATE\s+SERVICE)"                   # nmap table header
+    r"|(\bHost is up\b)"                           # nmap host-up line
+    r"|(Discovered open port)",                    # masscan output
+    re.IGNORECASE,
+)
 
 # Which prior phases to inject into each phase's prompt.
 _PHASE_CONTEXT: dict[int, list[int]] = {
@@ -115,15 +115,14 @@ def _load_state(target: str) -> WorkflowState | None:
 
 # ── Output validation ──────────────────────────────────────────────
 
-def _output_looks_valid(phase_num: int, text: str) -> bool:
-    """Check that output has enough substance and contains expected markers."""
-    if len(text.strip()) < _MIN_OUTPUT_CHARS:
-        return False
-    markers = _PHASE_OUTPUT_MARKERS.get(phase_num, [])
-    if not markers:
-        return True
-    text_lower = text.lower()
-    return any(m.lower() in text_lower for m in markers)
+def _output_looks_valid(phase_num: int, text: str) -> bool:  # noqa: ARG001
+    """Check that the phase produced non-empty output."""
+    return bool(text and text.strip())
+
+
+def _phase2_has_scan_results(text: str) -> bool:
+    """Check that Phase 2 output contains actual scan data, not just a plan."""
+    return bool(text and _PHASE2_SCAN_EVIDENCE.search(text))
 
 
 def _extract_output(messages: list) -> str:
@@ -149,7 +148,11 @@ def _build_prompt(
     phase_num: int, phase_name: str, target: str, findings: dict[int, str]
 ) -> str:
     """Construct the user message for a phase agent."""
-    lines = [f"Target: {target}", ""]
+    lines = [
+        f"You are authorized to test the following target: {target}",
+        f"Use {target} as the target IP/hostname for all tool calls in this phase.",
+        "",
+    ]
 
     if phase_num == 6:
         for prev in range(1, 6):
@@ -162,7 +165,7 @@ def _build_prompt(
                 lines.append(f"## Phase {prev} Findings\n{findings[prev]}")
                 lines.append("")
 
-    lines.append(f"Execute Phase {phase_num} — {phase_name} now.")
+    lines.append(f"Execute Phase {phase_num} — {phase_name} on {target} now.")
     return "\n".join(lines)
 
 
@@ -252,17 +255,14 @@ async def _run_phase(
             phase_num, attempt, len(output.strip()),
         )
 
+        retry_msg = (
+            f"Your Phase {phase_num} output is incomplete. "
+            f"Call the appropriate tools now and produce the full "
+            f"structured findings block."
+        )
+
         messages = response["messages"] + [
-            {
-                "role": "user",
-                "content": (
-                    f"Your response above is incomplete or missing the required "
-                    f"structured output for Phase {phase_num}. Re-read the output "
-                    f"format instructions and produce the FULL structured findings "
-                    f"block now. Do not repeat tool calls — summarise what you "
-                    f"already learned into the required format."
-                ),
-            }
+            {"role": "user", "content": retry_msg}
         ]
 
     if not _output_looks_valid(phase_num, output):
@@ -363,6 +363,27 @@ async def _run_report(
 
 # ── Main workflow ──────────────────────────────────────────────────
 
+def _validate_target(target: str) -> str:
+    """Validate and normalize the target string.
+
+    Accepts IPv4 addresses and hostnames/FQDNs. Rejects obviously invalid
+    targets that would waste LLM calls.
+    """
+    target = target.strip()
+    if not target:
+        raise ValueError("Target cannot be empty")
+
+    # Reject common argparse/placeholder mistakes
+    _INVALID_TARGETS = {"targets", "target", "hosts", "host", "ip", "ips", "none", "null", "test", "example"}
+    if target.lower() in _INVALID_TARGETS:
+        raise ValueError(
+            f"'{target}' looks like a placeholder, not a real target. "
+            f"Pass an IP address or hostname (e.g. 192.168.1.1 or host.example.com)."
+        )
+
+    return target
+
+
 async def run_workflow(target: str) -> PenTestReport:
     """Run the pentest workflow with adaptive branching and feedback loop.
 
@@ -372,6 +393,7 @@ async def run_workflow(target: str) -> PenTestReport:
 
     Resumes from saved state if a previous run was interrupted.
     """
+    target = _validate_target(target)
     saved = _load_state(target)
     if saved and saved.completion_status:
         logger.info(
@@ -405,6 +427,28 @@ async def run_workflow(target: str) -> PenTestReport:
         state.findings = findings
         _save_state(state)
 
+    # Validate Phase 2 produced actual scan results, not just a plan.
+    # Retry with progressively more direct prompts if needed.
+    phase2_retry = 0
+    while not _phase2_has_scan_results(findings[2]) and phase2_retry < _MAX_PHASE2_RETRIES:
+        phase2_retry += 1
+        logger.warning(
+            "Phase 2 output lacks scan evidence (attempt %d/%d) — re-running",
+            phase2_retry, _MAX_PHASE2_RETRIES,
+        )
+        del findings[2]
+        state.current_phase = 2
+        _save_state(state)
+        findings[2] = await _run_phase(phase2_scanning, llm, target, findings)
+        state.findings = findings
+        _save_state(state)
+
+    if not _phase2_has_scan_results(findings[2]):
+        logger.error(
+            "Phase 2 failed to produce scan results after %d retries",
+            _MAX_PHASE2_RETRIES,
+        )
+
     # Extract Phase 2 decision
     logger.info("Extracting Phase 2 decision...")
     p2_decision = await extract_decision(llm, findings[2], Phase2Decision)
@@ -414,7 +458,16 @@ async def run_workflow(target: str) -> PenTestReport:
     )
 
     if p2_decision.skip_phase3:
-        logger.info("No services found — skipping to report")
+        # Only skip if Phase 2 actually ran a scan and found nothing.
+        # If Phase 2 never produced real scan data, this is a failure, not
+        # a legitimate "no services" result.
+        if _phase2_has_scan_results(findings[2]):
+            logger.info("Scan completed — no services found. Skipping to report.")
+        else:
+            logger.warning(
+                "Phase 2 never produced real scan data but decision says skip. "
+                "Proceeding to report with incomplete results."
+            )
         findings.setdefault(3, "No services discovered. Phase 3 skipped.")
         findings.setdefault(4, "No vulnerabilities to exploit. Phase 4 skipped.")
         findings.setdefault(5, "No foothold obtained. Phase 5 skipped.")
@@ -431,16 +484,27 @@ async def run_workflow(target: str) -> PenTestReport:
         state.findings = findings
         _save_state(state)
 
+    # Detect if Phase 3 explicitly says it lacks Phase 2 data — this means
+    # the pipeline is broken, not that there are no vulns.
+    _phase3_missing_data = any(
+        phrase in findings[3].lower()
+        for phrase in ["don't have the phase 2", "no phase 2", "missing phase 2", "need the", "could you provide"]
+    )
+
     # Extract Phase 3 decision
     logger.info("Extracting Phase 3 decision...")
     p3_decision = await extract_decision(llm, findings[3], Phase3Decision)
     logger.info(
-        "Phase 3 decision: %d vulns, skip_phase4=%s",
-        len(p3_decision.vulns), p3_decision.skip_phase4,
+        "Phase 3 decision: %d vulns, skip_phase4=%s, missing_data=%s",
+        len(p3_decision.vulns), p3_decision.skip_phase4, _phase3_missing_data,
     )
 
     if p3_decision.skip_phase4:
-        logger.info("No exploitable vulnerabilities — skipping to report")
+        if _phase3_missing_data:
+            logger.warning(
+                "Phase 3 says skip but it also reported missing Phase 2 data. "
+                "This is a pipeline failure, not a clean skip."
+            )
         findings.setdefault(4, "No exploitable vulnerabilities found. Phase 4 skipped.")
         findings.setdefault(5, "No foothold obtained. Phase 5 skipped.")
         state.findings = findings

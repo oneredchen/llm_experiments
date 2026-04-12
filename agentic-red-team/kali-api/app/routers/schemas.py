@@ -5,48 +5,51 @@ from typing import Any, Dict
 from pydantic import BaseModel, Field
 
 
-class CommandRequest(BaseModel):
+class BaseToolRequest(BaseModel):
+    timeout: int = Field(None, description="Custom timeout for this operation in seconds")
+
+
+class CommandRequest(BaseToolRequest):
     command: str
 
 
-
-class NmapRequest(BaseModel):
+class NmapRequest(BaseToolRequest):
     target: str
     scan_type: str = "-sCV"
     ports: str = ""
     additional_args: str = "-T4 -Pn"
 
 
-class GobusterRequest(BaseModel):
+class GobusterRequest(BaseToolRequest):
     url: str
     mode: str = "dir"
     wordlist: str = "/usr/share/wordlists/dirb/common.txt"
     additional_args: str = ""
 
 
-class DirbRequest(BaseModel):
+class DirbRequest(BaseToolRequest):
     url: str
     wordlist: str = "/usr/share/wordlists/dirb/common.txt"
     additional_args: str = ""
 
 
-class NiktoRequest(BaseModel):
+class NiktoRequest(BaseToolRequest):
     target: str
     additional_args: str = ""
 
 
-class SqlmapRequest(BaseModel):
+class SqlmapRequest(BaseToolRequest):
     url: str
     data: str = ""
     additional_args: str = ""
 
 
-class MetasploitRequest(BaseModel):
+class MetasploitRequest(BaseToolRequest):
     module: str
     options: Dict[str, Any] = Field(default_factory=dict)
 
 
-class HydraRequest(BaseModel):
+class HydraRequest(BaseToolRequest):
     target: str
     service: str
     username: str = ""
@@ -56,42 +59,42 @@ class HydraRequest(BaseModel):
     additional_args: str = ""
 
 
-class JohnRequest(BaseModel):
+class JohnRequest(BaseToolRequest):
     hash_file: str
     wordlist: str = "/usr/share/wordlists/rockyou.txt"
     format: str = ""
     additional_args: str = ""
 
 
-class WpscanRequest(BaseModel):
+class WpscanRequest(BaseToolRequest):
     url: str
     additional_args: str = ""
 
 
-class Enum4linuxRequest(BaseModel):
+class Enum4linuxRequest(BaseToolRequest):
     target: str
     additional_args: str = "-a"
 
 
 # --- Recon ---
 
-class SearchsploitRequest(BaseModel):
+class SearchsploitRequest(BaseToolRequest):
     query: str
     additional_args: str = ""
 
 
-class WhatwebRequest(BaseModel):
+class WhatwebRequest(BaseToolRequest):
     target: str
     aggression: int = 1  # 1=stealthy, 3=aggressive, 4=heavy
     additional_args: str = ""
 
 
-class SslscanRequest(BaseModel):
+class SslscanRequest(BaseToolRequest):
     target: str  # host or host:port
     additional_args: str = ""
 
 
-class MasscanRequest(BaseModel):
+class MasscanRequest(BaseToolRequest):
     target: str
     ports: str = "0-65535"
     rate: int = 1000
@@ -100,7 +103,7 @@ class MasscanRequest(BaseModel):
 
 # --- Exploitation ---
 
-class MsfvenomRequest(BaseModel):
+class MsfvenomRequest(BaseToolRequest):
     payload: str           # e.g. linux/x86/meterpreter/reverse_tcp
     lhost: str = ""
     lport: int = 4444
@@ -111,7 +114,7 @@ class MsfvenomRequest(BaseModel):
 
 # --- Credentials ---
 
-class HashcatRequest(BaseModel):
+class HashcatRequest(BaseToolRequest):
     hash_file: str
     wordlist: str = "/usr/share/wordlists/rockyou.txt"
     hash_type: int = 0     # hashcat -m value; 0=MD5, 1000=NTLM, 1800=sha512crypt
@@ -119,7 +122,7 @@ class HashcatRequest(BaseModel):
     additional_args: str = ""
 
 
-class CrackmapexecRequest(BaseModel):
+class CrackmapexecRequest(BaseToolRequest):
     protocol: str          # smb, ssh, winrm, ldap, rdp, ftp
     target: str
     username: str = ""
@@ -131,7 +134,7 @@ class CrackmapexecRequest(BaseModel):
 
 # --- Post-exploitation ---
 
-class SmbclientRequest(BaseModel):
+class SmbclientRequest(BaseToolRequest):
     target: str
     share: str
     username: str = ""
@@ -140,7 +143,7 @@ class SmbclientRequest(BaseModel):
     additional_args: str = ""
 
 
-class ImpacketRequest(BaseModel):
+class ImpacketRequest(BaseToolRequest):
     tool: str              # secretsdump | psexec | GetNPUsers | GetUserSPNs | smbexec
     target: str            # IP or domain/user:pass@IP
     username: str = ""
@@ -150,6 +153,6 @@ class ImpacketRequest(BaseModel):
     additional_args: str = ""
 
 
-class LinpeasRequest(BaseModel):
+class LinpeasRequest(BaseToolRequest):
     target_os: str = "linux"   # linux | windows
     # Stages the script in the loot dir; upload to target via metasploit

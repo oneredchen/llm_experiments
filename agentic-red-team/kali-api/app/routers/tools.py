@@ -33,7 +33,7 @@ def generic_command(req: CommandRequest):
         if not req.command:
             raise HTTPException(status_code=400, detail="Command parameter is required")
 
-        return execute_command(req.command)
+        return execute_command(req.command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -58,7 +58,7 @@ def nmap(req: NmapRequest):
             command += shlex.split(req.additional_args)
 
         command.append(req.target)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -85,7 +85,7 @@ def gobuster(req: GobusterRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
 
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -106,7 +106,7 @@ def dirb(req: DirbRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
 
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -127,7 +127,7 @@ def nikto(req: NiktoRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
 
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -151,7 +151,7 @@ def sqlmap(req: SqlmapRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
 
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -188,7 +188,7 @@ def metasploit(req: MetasploitRequest):
             f.write(resource_content)
 
         command = ["msfconsole", "-q", "-r", resource_file]
-        result = execute_command(command)
+        result = execute_command(command, timeout=req.timeout)
 
         # Clean up the temporary file
         try:
@@ -240,7 +240,7 @@ def hydra(req: HydraRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
 
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -270,7 +270,7 @@ def john(req: JohnRequest):
             command += shlex.split(req.additional_args)
 
         command.append(req.hash_file)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -291,7 +291,7 @@ def wpscan(req: WpscanRequest):
         if req.additional_args:
             command += shlex.split(req.additional_args)
 
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -308,7 +308,7 @@ def enum4linux(req: Enum4linuxRequest):
             raise HTTPException(status_code=400, detail="Target parameter is required")
 
         command = ["enum4linux"] + shlex.split(req.additional_args) + [req.target]
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:

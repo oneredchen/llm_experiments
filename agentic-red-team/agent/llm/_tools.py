@@ -5,7 +5,7 @@ modules rather than importing individual tools everywhere.
 """
 
 from agent.tools.kali_api import (
-    run_command,
+    kali_command,
     nmap,
     masscan,
     searchsploit,
@@ -26,70 +26,77 @@ from agent.tools.kali_api import (
     smbclient,
     impacket,
     linpeas,
-    read_file,
-    list_files,
-    upload_file,
-    delete_file,
+    kali_read_file,
+    kali_list_files,
+    kali_upload_file,
+    kali_delete_file,
 )
 from agent.tools.kali_api import get_tools as get_all_tools  # noqa: F401
 
 
 # ── Phase 1: Recon (passive only) ──────────────────────────────────
 def recon_tools() -> list:
-    return [run_command, read_file, list_files]
+    return [kali_command, kali_read_file, kali_list_files]
 
 
 # ── Phase 2: Scanning orchestrator (port discovery) ────────────────
 def scanning_tools() -> list:
-    return [nmap, masscan, run_command]
+    return [nmap, masscan, kali_command]
 
 
 # ── Phase 2 subagent tool sets ─────────────────────────────────────
 def http_enum_tools() -> list:
-    return [whatweb, gobuster, dirb, nikto, wpscan, sslscan, run_command]
+    return [whatweb, gobuster, dirb, nikto, wpscan, sslscan, kali_command]
 
 
 def smb_enum_tools() -> list:
-    return [enum4linux, smbclient, crackmapexec, run_command]
+    return [enum4linux, smbclient, crackmapexec, kali_command]
 
 
 def ftp_enum_tools() -> list:
-    return [run_command, read_file, list_files]
+    return [kali_command, kali_read_file, kali_list_files]
 
 
 def ssh_enum_tools() -> list:
-    return [run_command]
+    return [kali_command]
 
 
 def generic_enum_tools() -> list:
-    return [nmap, run_command]
+    return [nmap, kali_command]
 
 
 # ── Phase 3: Vulnerability identification ──────────────────────────
 def vuln_id_tools() -> list:
-    return [searchsploit, nmap, nikto, sslscan, run_command, read_file]
+    return [searchsploit, nmap, nikto, sslscan, kali_command, kali_read_file]
 
 
 # ── Phase 4 subagent tool sets ─────────────────────────────────────
 def msf_exploit_tools() -> list:
-    return [metasploit, msfvenom, run_command, read_file, list_files]
+    return [metasploit, msfvenom, kali_command, kali_read_file, kali_list_files]
 
 
 def web_exploit_tools() -> list:
-    return [sqlmap, nikto, run_command, read_file]
+    return [sqlmap, nikto, kali_command, kali_read_file]
 
 
 def cred_exploit_tools() -> list:
-    return [hydra, crackmapexec, john, hashcat, run_command, read_file]
+    return [hydra, crackmapexec, john, hashcat, kali_command, kali_read_file]
 
 
 def smb_exploit_tools() -> list:
-    return [metasploit, crackmapexec, impacket, smbclient, run_command]
+    return [metasploit, crackmapexec, impacket, smbclient, kali_command]
 
 
 # ── Phase 5: Post-exploitation ─────────────────────────────────────
 def post_exploit_tools() -> list:
     return [
-        metasploit, impacket, linpeas, crackmapexec,
-        run_command, read_file, list_files, upload_file, delete_file,
+        metasploit,
+        impacket,
+        linpeas,
+        crackmapexec,
+        kali_command,
+        kali_read_file,
+        kali_list_files,
+        kali_upload_file,
+        kali_delete_file,
     ]

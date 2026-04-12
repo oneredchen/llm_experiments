@@ -115,15 +115,16 @@ class CommandExecutor:
             }
 
 
-def execute_command(command: Union[str, list]) -> Dict[str, Any]:
+def execute_command(command: Union[str, list], timeout: int = None) -> Dict[str, Any]:
     """
     Execute a command and return the result.
 
     Args:
         command: The command to execute (list for safe mode, string for shell mode)
+        timeout: Optional custom timeout in seconds (falls back to default if None)
 
     Returns:
         A dictionary containing the stdout, stderr, and return code
     """
-    executor = CommandExecutor(command)
+    executor = CommandExecutor(command, timeout=timeout or COMMAND_TIMEOUT)
     return executor.execute()

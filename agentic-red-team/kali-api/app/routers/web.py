@@ -25,7 +25,7 @@ def gobuster(req: GobusterRequest):
         command = ["gobuster", req.mode, "-u", req.url, "-w", req.wordlist]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -42,7 +42,7 @@ def dirb(req: DirbRequest):
         command = ["dirb", req.url, req.wordlist]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -59,7 +59,7 @@ def nikto(req: NiktoRequest):
         command = ["nikto", "-h", req.target]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -78,7 +78,7 @@ def sqlmap(req: SqlmapRequest):
             command += ["--data", req.data]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:
@@ -95,7 +95,7 @@ def wpscan(req: WpscanRequest):
         command = ["wpscan", "--url", req.url]
         if req.additional_args:
             command += shlex.split(req.additional_args)
-        return execute_command(command)
+        return execute_command(command, timeout=req.timeout)
     except HTTPException:
         raise
     except Exception as e:

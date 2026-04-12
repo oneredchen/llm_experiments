@@ -69,4 +69,19 @@ async def extract_decision(
     result = await agent.ainvoke(
         {"messages": [{"role": "user", "content": findings}]}
     )
+
+    if "structured_response" not in result:
+        from agent.workflow import logger
+        logger.error(
+            "CRITICAL: LLM failed to produce structured response for %s. Result: %s",
+            decision_model.__name__, result
+        )
+        # Fallback: return a default instance of the model if possible
+        # This prevents a total crash and allows the workflow to use defaults.
+        try:
+            return decision_model()
+        except Exception:
+             # If model requires fields, return the raw result or raise a more descriptive error
+             raise KeyError(f"LLM failed to produce {decision_model.__name__} and model has no default")
+
     return result["structured_response"]
