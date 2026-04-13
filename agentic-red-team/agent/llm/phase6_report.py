@@ -1,7 +1,7 @@
 """Phase 6 — Reporting.
 
 Compiles all findings into a structured PenTestReport.
-No tools, no subagents. Uses response_format=PenTestReport for structured output.
+No tools. Uses response_format=PenTestReport for structured output.
 """
 
 from agent.llm._shared import SHARED_RULES
@@ -47,7 +47,3 @@ explicitly rather than leaving it blank or filling with generic placeholder text
 
 def get_tools() -> list:
     return []
-
-
-def get_subagents() -> list | None:
-    return None

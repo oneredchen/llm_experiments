@@ -31,15 +31,3 @@ def health_check():
     }
 
 
-@router.get("/mcp/capabilities")
-def get_capabilities():
-    """Return tool capabilities similar to our existing MCP server."""
-    # TODO: implement MCP capability discovery
-    pass
-
-
-@router.post("/mcp/tools/kali_tools/{tool_name}")
-def execute_tool(tool_name: str):
-    """Direct tool execution without going through the API server."""
-    # TODO: implement direct MCP tool execution
-    pass

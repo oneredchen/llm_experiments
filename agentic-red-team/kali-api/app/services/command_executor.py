@@ -30,13 +30,13 @@ class CommandExecutor:
 
     def _read_stdout(self):
         """Thread function to continuously read stdout."""
-        for line in iter(self.process.stdout.readline, ""):
-            self.stdout_data += line
+        for line in iter(self.process.stdout.readline, b""):
+            self.stdout_data += line.decode("utf-8", errors="replace")
 
     def _read_stderr(self):
         """Thread function to continuously read stderr."""
-        for line in iter(self.process.stderr.readline, ""):
-            self.stderr_data += line
+        for line in iter(self.process.stderr.readline, b""):
+            self.stderr_data += line.decode("utf-8", errors="replace")
 
     def execute(self) -> Dict[str, Any]:
         """Execute the command and handle timeout gracefully."""
@@ -48,8 +48,7 @@ class CommandExecutor:
                 shell=self.use_shell,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,  # Line buffered
+                bufsize=0,  # Unbuffered binary
             )
 
             # Start threads to read output continuously

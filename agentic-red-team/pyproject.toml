@@ -11,6 +11,7 @@ dependencies = [
     "jinja2>=3.1.0",
     "langchain>=1.2.13",
     "langchain-ollama>=1.0.1",
+    "json-repair>=0.30.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
 ]

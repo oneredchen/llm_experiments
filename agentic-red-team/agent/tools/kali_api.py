@@ -127,7 +127,7 @@ async def dirb(url: str, wordlist: str = "/usr/share/wordlists/dirb/common.txt",
 
 @tool
 async def nikto(target: str, additional_args: str = "") -> str:
-    """Scan a web server for misconfigurations, outdated software, and known vulnerabilities. Target: URL or host."""
+    """Scan a web server for misconfigurations, outdated software, and known vulnerabilities. Target must be a full URL, e.g. 'http://192.168.50.70' or 'http://192.168.50.70:8180'."""
     return await _api_post("/api/tools/nikto", {"target": target, "additional_args": additional_args})
 
 
@@ -149,9 +149,9 @@ async def wpscan(url: str, additional_args: str = "") -> str:
 
 
 @tool
-async def metasploit(module: str, options: dict[str, Any] = {}) -> str:
+async def metasploit(module: str, options: dict[str, Any] = None) -> str:
     """Run a Metasploit module. Use for exploits and post-exploitation instead of nc/netcat. Example: metasploit(module="exploit/unix/ftp/vsftpd_234_backdoor", options={"RHOSTS": "10.0.0.1"})."""
-    return await _api_post("/api/tools/metasploit", {"module": module, "options": options})
+    return await _api_post("/api/tools/metasploit", {"module": module, "options": options or {}})
 
 
 @tool

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class BaseToolRequest(BaseModel):
-    timeout: int = Field(None, description="Custom timeout for this operation in seconds")
+    timeout: int | None = Field(None, description="Custom timeout for this operation in seconds")
 
 
 class CommandRequest(BaseToolRequest):

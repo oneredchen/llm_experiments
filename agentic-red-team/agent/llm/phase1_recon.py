@@ -1,7 +1,7 @@
 """Phase 1 — Reconnaissance.
 
 Passive information gathering: whois, DNS, host role assessment.
-No subagents — single agent with minimal tools.
+Single agent with minimal tools.
 """
 
 from agent.llm._shared import SHARED_RULES
@@ -35,7 +35,3 @@ When done, produce a "Phase 1 Findings" summary with:
 
 def get_tools() -> list:
     return recon_tools()
-
-
-def get_subagents() -> list | None:
-    return None

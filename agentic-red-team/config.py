@@ -11,7 +11,7 @@ class OllamaSettings(BaseSettings):
     )
     host: str = "http://192.168.50.21:11434"
     api_key: str = ""
-    model: str = "gemma4:26b"
+    model: str = "qwen3.5:35b-a3b-coding-nvfp4"
     keep_alive: int = 1800  # seconds; 1800 = 30 minutes
 
 

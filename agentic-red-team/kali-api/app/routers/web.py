@@ -56,7 +56,14 @@ def nikto(req: NiktoRequest):
     try:
         if not req.target:
             raise HTTPException(status_code=400, detail="target is required")
-        command = ["nikto", "-h", req.target]
+        target = req.target.strip()
+        is_https = target.startswith("https://")
+        # Ensure nikto gets a full URL so it doesn't guess the scheme
+        if not target.startswith("http://") and not target.startswith("https://"):
+            target = "https://" + target if "443" in target else "http://" + target
+        command = ["nikto", "-h", target]
+        if not is_https:
+            command += ["-nossl"]
         if req.additional_args:
             command += shlex.split(req.additional_args)
         return execute_command(command, timeout=req.timeout)

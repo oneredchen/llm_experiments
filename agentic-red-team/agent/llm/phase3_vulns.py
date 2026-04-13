@@ -1,7 +1,7 @@
 """Phase 3 — Vulnerability Identification.
 
 Cross-references discovered services against known CVEs and misconfigurations.
-No subagents — single agent with vuln-scanning tools.
+Single agent with vuln-scanning tools.
 """
 
 from agent.llm._shared import SHARED_RULES
@@ -37,7 +37,3 @@ When done, produce a "Phase 3 Findings" vulnerability list. For each entry:
 
 def get_tools() -> list:
     return vuln_id_tools()
-
-
-def get_subagents() -> list | None:
-    return None

@@ -1,20 +1,24 @@
-"""Pentest workflow orchestrator with subagents and feedback loop.
+"""Pentest workflow orchestrator with feedback loop.
 
 Runs 6 phases with adaptive branching:
-  Phase 1 → Phase 2 (subagents) → Phase 3 → Phase 4 (subagents) → Phase 5 → Phase 6
-                                                  ↑                    |
-                                                  └── feedback loop ───┘
-                                                    (max 2 iterations)
+  Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
+                                    ↑           |
+                                    └── feedback loop ───┘
+                                      (max 2 iterations)
 
 Pydantic decision models at phase boundaries control skip/loop logic.
 """
 
+import asyncio
 import json
 import logging
 import re
 from datetime import date
 from pathlib import Path
 from types import ModuleType
+
+from json_repair import repair_json
+from pydantic import ValidationError
 
 from pydantic import BaseModel, Field
 from langchain_core.messages import AIMessage
@@ -200,6 +204,7 @@ def _parse_report(raw: str) -> PenTestReport:
         text = re.sub(r"^```[a-z]*\n?", "", text)
         text = re.sub(r"\n?```$", "", text.strip())
     text = _sanitize_json(text.strip())
+    text = repair_json(text, return_objects=False)
     return PenTestReport.model_validate_json(text)
 
 
@@ -216,7 +221,6 @@ async def _run_phase(
     phase_name = phase_module.PHASE_NAME
 
     tools = phase_module.get_tools()
-    subagents = phase_module.get_subagents()
 
     resolved_prompt = phase_module.SYSTEM_PROMPT.replace(
         "{{current_date}}", date.today().isoformat()
@@ -226,25 +230,31 @@ async def _run_phase(
         resolved_prompt,
         tools,
         llm=llm,
-        subagents=subagents,
     )
 
     prompt = _build_prompt(phase_num, phase_name, target, findings)
     logger.info("Phase %d prompt:\n%s", phase_num, prompt)
     logger.info("Phase %d tools: %s", phase_num, [t.name for t in tools])
-    if subagents:
-        logger.info(
-            "Phase %d subagents: %s",
-            phase_num, [s["name"] for s in subagents],
-        )
 
     output = ""
     messages = [{"role": "user", "content": prompt}]
     for attempt in range(1, _MAX_RETRIES + 2):
-        response = await agent.ainvoke(
-            {"messages": messages},
-            config={"callbacks": [_callback]},
-        )
+        try:
+            response = await agent.ainvoke(
+                {"messages": messages},
+                config={"callbacks": [_callback]},
+            )
+        except (ValueError, Exception) as exc:
+            if attempt > _MAX_RETRIES:
+                raise
+            wait = 2 ** attempt
+            logger.warning(
+                "Phase %d attempt %d LLM call failed (%s) — retrying in %ds",
+                phase_num, attempt, exc, wait,
+            )
+            await asyncio.sleep(wait)
+            messages = [{"role": "user", "content": prompt}]  # fresh start
+            continue
         output = _extract_output(response["messages"])
 
         if _output_looks_valid(phase_num, output):
@@ -289,15 +299,12 @@ async def _run_targeted_reenum(
     Appends to existing Phase 2 findings rather than replacing them.
     """
     tools = phase2_scanning.get_tools()
-    subagents = phase2_scanning.get_subagents()
 
     resolved_prompt = phase2_scanning.SYSTEM_PROMPT.replace(
         "{{current_date}}", date.today().isoformat()
     )
 
-    agent = create_phase_agent(
-        resolved_prompt, tools, llm=llm, subagents=subagents
-    )
+    agent = create_phase_agent(resolved_prompt, tools, llm=llm)
 
     prompt = (
         f"Target: {target}\n\n"
@@ -305,7 +312,7 @@ async def _run_targeted_reenum(
         f"## Re-enumeration Directive\n{reenum_context}\n\n"
         f"Perform TARGETED re-enumeration based on the new information above. "
         f"Do NOT repeat the full port scan. Focus only on the services and "
-        f"access methods indicated by the new context. Use subagents as needed."
+        f"access methods indicated by the new context."
     )
 
     logger.info("Targeted re-enumeration prompt:\n%s", prompt)
@@ -329,36 +336,71 @@ async def _run_report(
     llm, target: str, findings: dict[int, str]
 ) -> PenTestReport:
     """Run Phase 6 with structured output and return a PenTestReport."""
+    from langchain_ollama import ChatOllama
+    from config import settings
+
     resolved_prompt = phase6_report.SYSTEM_PROMPT.replace(
         "{{current_date}}", date.today().isoformat()
+    )
+
+    # Use lower temperature for structured JSON output
+    report_llm = ChatOllama(
+        base_url=settings.ollama.host,
+        model=settings.ollama.model,
+        temperature=0.3,
+        num_ctx=settings.agent.num_ctx,
+        keep_alive=settings.ollama.keep_alive,
+        reasoning=True,
     )
 
     agent = create_phase_agent(
         resolved_prompt,
         tools=[],
-        llm=llm,
+        llm=report_llm,
         response_format=PenTestReport,
     )
 
     prompt = _build_prompt(6, phase6_report.PHASE_NAME, target, findings)
     logger.info("Phase 6 prompt:\n%s", prompt)
 
-    response = await agent.ainvoke(
-        {"messages": [{"role": "user", "content": prompt}]},
-        config={"callbacks": [_callback]},
-    )
+    messages = [{"role": "user", "content": prompt}]
+    for attempt in range(1, 4):
+        response = await agent.ainvoke(
+            {"messages": messages},
+            config={"callbacks": [_callback]},
+        )
 
-    if response.get("structured_response"):
-        report = response["structured_response"]
-        output = report.model_dump_json(indent=2)
-    else:
+        if response.get("structured_response"):
+            report = response["structured_response"]
+            output = report.model_dump_json(indent=2)
+            findings[6] = output
+            logger.info("Phase 6 output:\n%s", output)
+            print(f"\n{'=' * 60}\nPhase 6 — Reporting complete\n{'=' * 60}\n{output}\n")
+            return report
+
         output = _extract_output(response["messages"])
-        report = _parse_report(output)
-
-    findings[6] = output
-    logger.info("Phase 6 output:\n%s", output)
-    print(f"\n{'=' * 60}\nPhase 6 — Reporting complete\n{'=' * 60}\n{output}\n")
-    return report
+        try:
+            report = _parse_report(output)
+            findings[6] = report.model_dump_json(indent=2)
+            logger.info("Phase 6 output:\n%s", findings[6])
+            print(f"\n{'=' * 60}\nPhase 6 — Reporting complete\n{'=' * 60}\n{findings[6]}\n")
+            return report
+        except (ValidationError, Exception) as e:
+            if attempt == 3:
+                raise
+            logger.warning(
+                "Phase 6 attempt %d JSON parse failed: %s — retrying", attempt, e
+            )
+            messages = response["messages"] + [
+                {
+                    "role": "user",
+                    "content": (
+                        f"Your JSON output was invalid and could not be parsed: {e}. "
+                        "Regenerate the complete, valid JSON report. "
+                        "Ensure all object keys are quoted strings and the JSON is well-formed."
+                    ),
+                }
+            ]
 
 
 # ── Main workflow ──────────────────────────────────────────────────
@@ -419,7 +461,7 @@ async def run_workflow(target: str) -> PenTestReport:
         state.findings = findings
         _save_state(state)
 
-    # ── Phase 2: Scanning & Enumeration (with subagents) ───────────
+    # ── Phase 2: Scanning & Enumeration ───────────────────────────
     if 2 not in findings:
         state.current_phase = 2
         _save_state(state)
@@ -512,7 +554,7 @@ async def run_workflow(target: str) -> PenTestReport:
         _save_state(state)
         return await _run_report(llm, target, findings)
 
-    # ── Phase 4: Exploitation (with subagents + feedback loop) ─────
+    # ── Phase 4: Exploitation (with feedback loop) ────────────────
     p4_decision = None
     for loop_i in range(state.feedback_loop_count, _MAX_FEEDBACK_LOOPS + 1):
         if 4 not in findings or loop_i > 0:

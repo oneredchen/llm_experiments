@@ -20,19 +20,3 @@ NEVER use `kali_command` with:
 3. Stop and report immediately if you encounter unexpected sensitive data.
 """
 
-SUBAGENT_RULES = """
-## SUBAGENT DISPATCH
-You have access to the `task` tool for dispatching specialized subagents. Each subagent
-runs independently with its own tool set and returns a summary of its findings.
-
-When calling the `task` tool, your `description` parameter MUST include:
-1. The target IP address
-2. The specific port number(s) to investigate
-3. The detected service name and version (if known)
-4. Any relevant context from prior scanning (e.g. "anonymous login detected")
-
-The subagent cannot see your conversation history — the description is ALL the
-context it receives. Be thorough in what you pass.
-
-After each subagent returns, assess its findings before dispatching the next one.
-"""

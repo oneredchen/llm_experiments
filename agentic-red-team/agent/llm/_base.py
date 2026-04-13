@@ -27,16 +27,14 @@ def create_phase_agent(
     tools: list,
     llm=None,
     response_format=None,
-    subagents=None,
 ):
     """Return a deep agent configured for a single phase.
 
     Args:
         system_prompt: Phase-specific system instructions.
-        tools: Tools the orchestrator agent can call directly.
+        tools: Tools the agent can call directly.
         llm: Reusable ChatOllama instance (creates new if None).
         response_format: Pydantic model for structured output (e.g. Phase 6).
-        subagents: List of SubAgent specs for phases with subagents.
     """
     llm = llm or create_llm()
     return create_deep_agent(
@@ -44,7 +42,6 @@ def create_phase_agent(
         tools=tools,
         system_prompt=system_prompt,
         response_format=response_format,
-        subagents=subagents,
     )
 
 
