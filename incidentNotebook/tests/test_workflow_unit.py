@@ -261,6 +261,18 @@ def test_empty_extraction_short_circuits_evaluator(scripted):
     assert len(scripted["eval_host"].calls) == 0
 
 
+def test_evaluator_failure_returns_latest_valid_extraction(scripted):
+    scripted["eval_host"].payloads = [{"not": "an evaluation result"}]
+
+    result = run_workflow()
+
+    assert [ioc.indicator for ioc in result["host_ioc_objects"]] == ["evil.exe"]
+    # Pydantic AI performs its validation retry, but the extraction itself is
+    # not discarded or repeated when only quality control fails.
+    assert len(scripted["host"].calls) == 1
+    assert len(scripted["eval_host"].calls) > 1
+
+
 # ---------------------------------------------------------------------------
 # Control-flow model validation
 # ---------------------------------------------------------------------------
@@ -270,6 +282,10 @@ def test_evaluation_result_validation():
     assert EvaluationResult(verdict="needs_improvement", feedback="fix it").feedback == "fix it"
     with pytest.raises(ValidationError):
         EvaluationResult(verdict="bogus")
+    with pytest.raises(ValidationError):
+        EvaluationResult(verdict="needs_improvement")
+    with pytest.raises(ValidationError):
+        EvaluationResult(verdict="needs_improvement", feedback="   ")
 
 
 def test_triage_decision_validation():

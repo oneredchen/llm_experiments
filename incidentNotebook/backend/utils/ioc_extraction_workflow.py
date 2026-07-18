@@ -76,9 +76,11 @@ def _evaluate(
         return None
 
     items_str = "\n".join(item.model_dump_json() for item in extracted)
-    result = agents.get_evaluation_agent(model, type_label).run_sync(
+    result = agents.run_agent_sync(
+        agents.get_evaluation_agent(model, type_label),
+        model,
         f"Original incident description:\n{original_description}\n\n"
-        f"Extracted {type_label} data:\n{items_str}"
+        f"Extracted {type_label} data:\n{items_str}",
     )
     evaluation = result.output
     logger.info(
@@ -120,7 +122,12 @@ def _run_extraction_loop(
             )
 
         try:
-            result = extraction_agent.run_sync(description, instructions=instructions)
+            result = agents.run_agent_sync(
+                extraction_agent,
+                model,
+                description,
+                instructions=instructions,
+            )
             last_extraction = result.output.iocs
         except Exception as e:
             logger.error(f"{type_label} extraction attempt {attempt + 1} failed: {e}")
@@ -130,7 +137,17 @@ def _run_extraction_loop(
             )
             continue
 
-        evaluation = _evaluate(model, last_extraction, type_label, description)
+        try:
+            evaluation = _evaluate(model, last_extraction, type_label, description)
+        except Exception as e:
+            # A schema-valid extraction is still useful if the optional quality
+            # review exhausts its own retries or the provider fails mid-review.
+            logger.error(
+                f"{type_label} evaluation failed; returning the latest valid "
+                f"extraction: {e}"
+            )
+            break
+
         if evaluation is None or evaluation.verdict == "perfect":
             logger.info(f"{type_label} extraction accepted after {attempt + 1} attempt(s).")
             break
@@ -158,10 +175,16 @@ def run_triage(state: WorkflowState) -> dict:
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         host_future = executor.submit(
-            agents.get_triage_host_agent(model).run_sync, description
+            agents.run_agent_sync,
+            agents.get_triage_host_agent(model),
+            model,
+            description,
         )
         network_future = executor.submit(
-            agents.get_triage_network_agent(model).run_sync, description
+            agents.run_agent_sync,
+            agents.get_triage_network_agent(model),
+            model,
+            description,
         )
         host_decision = host_future.result().output
         network_decision = network_future.result().output

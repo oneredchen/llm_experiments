@@ -1,5 +1,38 @@
 # Feature 11: Migrate LLM Layer to Pydantic AI over the OpenAI v1 API
 
+## Implementation status (2026-07-18)
+
+**Implemented and verified offline:** all of Phases 1–4, the offline unit-test
+suite, and the `/workflow/models` API tests. Success criteria 1, 3, 5, and 6 are
+met. **Pending a live LLM server:** the 20-case quality regression eval
+(criterion 4) and the two-server interop smoke test (criterion 2) — no server
+was reachable in the dev environment at implementation time; run
+`uv run python tests/test_workflow.py` once per output mode when one is.
+
+Deviations / discoveries worth knowing:
+
+- pydantic-ai 2.13 specifics: `FunctionModel` test doubles must return a
+  `ModelResponse` (not plain dicts); non-object outputs such as `TriageDecision`
+  are wrapped as `{"response": ...}` under both `NativeOutput` and
+  `PromptedOutput`; `agent.override()` is contextvar-based and does **not**
+  propagate across threads — since the LangGraph fan-out runs in thread pools,
+  the offline tests monkeypatch the agent getters on `backend.utils.agents`
+  instead of using `override()`.
+- The extraction output models moved from `ioc_extraction_workflow.py` to
+  `agents.py` (re-exported from the workflow module for compatibility) to avoid
+  a circular import; `get_evaluation_agent` is cached per
+  `(model_name, type_label)` because its instructions embed the label.
+- `list_models()` uses `timeout=5s, max_retries=0`: the openai SDK defaults
+  retried for minutes, hanging the UI dropdown; verified a stopped server now
+  yields the 503 in ~5 s.
+- `tests/test_api_refactor.py` needed no mock changes (it's a live-server
+  script that never touched `ollama`); it and `tests/test_workflow.py` are
+  excluded from default pytest collection via `addopts` in `pyproject.toml`,
+  which also sets `pythonpath = ["."]` so `uv run pytest` works from the root.
+- `tests/test_workflow.py` (eval script) was migrated to the `openai` SDK and
+  the new `ioc_extraction_agent_workflow(llm_model, case_id, incident_description)`
+  signature.
+
 ## Overview
 
 Replace the `ollama` Python client with **Pydantic AI** agents that talk to any
@@ -104,8 +137,8 @@ Frontend is unaffected: it selects a model name via `GET /workflow/models` and p
 
 ### Phase 1 — Dependencies & configuration
 
-- [ ] `uv add "pydantic-ai-slim[openai]"` ; `uv remove ollama`.
-- [ ] `.env.template`: replace `OLLAMA_HOST` with commented examples:
+- [x] `uv add "pydantic-ai-slim[openai]"` ; `uv remove ollama`.
+- [x] `.env.template`: replace `OLLAMA_HOST` with commented examples:
       ```
       LLM_BASE_URL=http://192.168.50.21:11434/v1   # Ollama (note /v1)
       # LLM_BASE_URL=http://localhost:1234/v1      # LM Studio
@@ -113,20 +146,20 @@ Frontend is unaffected: it selects a model name via `GET /workflow/models` and p
       # LLM_OUTPUT_MODE=native                     # native | prompted
       ```
       Update local `.env` accordingly.
-- [ ] New `backend/utils/llm.py`: env loading (single place — remove `load_dotenv`/`OLLAMA_HOST`
+- [x] New `backend/utils/llm.py`: env loading (single place — remove `load_dotenv`/`OLLAMA_HOST`
       from `backend/routers/workflow.py`), `build_model()`, `get_output_mode()`, and a
       startup-time warning log if `LLM_BASE_URL` lacks a `/v1` path (the classic misconfig).
 
 ### Phase 2 — Agent layer
 
-- [ ] New `backend/utils/agents.py`: `TriageDecision`, `EvaluationResult`, the five agent
+- [x] New `backend/utils/agents.py`: `TriageDecision`, `EvaluationResult`, the five agent
       builders (`get_triage_host_agent(model_name)` etc., `lru_cache`d), prompts migrated from
       `ioc_extraction_workflow.py` minus the schema-dump/single-word-format instructions,
       wrapped in `NativeOutput`/`PromptedOutput` per `LLM_OUTPUT_MODE`.
 
 ### Phase 3 — Rewrite workflow internals
 
-- [ ] `backend/utils/ioc_extraction_workflow.py`:
+- [x] `backend/utils/ioc_extraction_workflow.py`:
       - Delete `get_client`, `chat_completion`; imports of `ollama` and `json` (schema dumps) go.
       - `WorkflowState`: drop `ollama_host`; triage fields become `TriageDecision` values.
       - `_triage_host`/`_triage_network` → single `agent.run_sync(description).output` calls
@@ -139,22 +172,22 @@ Frontend is unaffected: it selects a model name via `GET /workflow/models` and p
         `indicator_id` stamping stays in the nodes.
       - `ioc_extraction_agent_workflow(llm_model, case_id, incident_description)` — remove the
         `ollama_host` parameter (grep confirms `backend/routers/workflow.py` is the only caller).
-- [ ] `backend/routers/workflow.py`: drop `ollama_host` plumbing; rewrite `/workflow/models`
+- [x] `backend/routers/workflow.py`: drop `ollama_host` plumbing; rewrite `/workflow/models`
       using the `openai` SDK against `LLM_BASE_URL`; on connection failure return 503 with a
       hint naming the configured base URL (today's 500 with a raw exception is unhelpful when
       the local server is simply not running).
 
 ### Phase 4 — Docs & cleanup
 
-- [ ] README: prerequisites section rewritten — "any OpenAI-compatible local LLM server",
+- [x] README: prerequisites section rewritten — "any OpenAI-compatible local LLM server",
       per-server base-URL examples, the context-length note from design decision 6, updated
       env-var table. Remove stale Streamlit/`frontend-next` references while in there.
-- [ ] Optional (flag in PR, don't block): `streamlit` in `pyproject.toml` is a legacy
+- [x] Optional (flag in PR, don't block): `streamlit` in `pyproject.toml` is a legacy
       dependency of the pre-Next.js UI — remove if `grep` confirms nothing imports it.
 
 ## Testing
 
-- [ ] **Offline unit tests** — the migration's biggest testing win: Pydantic AI's
+- [x] **Offline unit tests** — the migration's biggest testing win: Pydantic AI's
       `TestModel`/`FunctionModel` let the whole graph run without any LLM server. New
       `tests/test_workflow_unit.py` (pytest, no network):
       - `Agent.override(model=FunctionModel(...))` per agent to script scenarios:
@@ -168,17 +201,19 @@ Frontend is unaffected: it selects a model name via `GET /workflow/models` and p
         - Extraction output that fails schema validation on every retry → branch returns `[]`
           and the workflow still completes (no exception to the API layer).
       - `EvaluationResult`/`TriageDecision` validation edge cases.
-- [ ] **API tests**: update `tests/test_api_refactor.py` mocks if they touch `ollama`;
+- [x] **API tests**: update `tests/test_api_refactor.py` mocks if they touch `ollama`;
       add a `/workflow/models` test with the `openai` client mocked (respx or monkeypatch):
       success path returns model IDs; connection-refused path returns 503 with the base URL
       in the detail.
-- [ ] **Quality regression eval** (the gate for merging): run `tests/test_workflow.py`
+- [ ] **Quality regression eval** (the gate for merging): PENDING — no live LLM server was
+      reachable at implementation time. Run `tests/test_workflow.py`
       against the 20 sample incidents in `cases/` on the same local models used for the
       existing baselines (`tests/test_results/test-NN-{gemma3_27b,qwen3_30b,llama3.1_8b}.json`),
       via Ollama's OpenAI endpoint. Compare per-case host/network/timeline counts and key
       indicator values against the baselines; investigate any case where counts drift by more
       than ±20%. Repeat the run once with `LLM_OUTPUT_MODE=prompted` to validate the fallback.
-- [ ] **Interop smoke test** (manual, documented in PR): point `LLM_BASE_URL` at at least two
+- [ ] **Interop smoke test** (manual, documented in PR): PENDING — needs two live servers.
+      Point `LLM_BASE_URL` at at least two
       different servers (e.g. Ollama and LM Studio), run one extraction end-to-end through the
       UI on each, confirm `/workflow/models` populates the dropdown for both.
 

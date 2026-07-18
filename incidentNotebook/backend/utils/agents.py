@@ -9,12 +9,13 @@ format) by default, switchable to ``PromptedOutput`` via ``LLM_OUTPUT_MODE``
 for servers/models that reject ``json_schema``.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from functools import lru_cache
-from typing import Annotated, List, Literal, Optional
+from typing import Annotated, Any, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pydantic_ai import Agent, NativeOutput, PromptedOutput
 from pydantic_ai.settings import ModelSettings
 
@@ -137,6 +138,17 @@ class EvaluationResult(BaseModel):
         description="Brief actionable feedback on what to fix or add. Required when verdict is 'needs_improvement'.",
     )
 
+    @model_validator(mode="after")
+    def require_improvement_feedback(self) -> "EvaluationResult":
+        """A refinement verdict is only useful when it says what to refine."""
+        if self.verdict == "needs_improvement" and not (
+            self.feedback and self.feedback.strip()
+        ):
+            raise ValueError(
+                "feedback must be non-empty when verdict is 'needs_improvement'"
+            )
+        return self
+
 
 # ==================================
 # PROMPTS (migrated from ioc_extraction_workflow; schema-dump and
@@ -240,6 +252,7 @@ def evaluation_instructions(type_label: str) -> str:
 # ==================================
 
 _MODEL_SETTINGS = ModelSettings(temperature=0.2)
+_AGENT_CACHE_SIZE = 32
 
 
 def _structured(output_type):
@@ -249,10 +262,44 @@ def _structured(output_type):
     return NativeOutput(output_type)
 
 
-@lru_cache(maxsize=None)
+def run_agent_sync(
+    agent: Agent,
+    model_name: str,
+    user_prompt: str,
+    *,
+    instructions: Optional[str] = None,
+) -> Any:
+    """Run an agent with a request-scoped model/client.
+
+    Pydantic AI's OpenAI models contain an async HTTP client. The workflow is
+    synchronous and executes cached agents from several worker threads, so
+    caching a model-bound agent can reuse one async client across different
+    event loops. Build and close the model inside the event loop for each call
+    while keeping the model-free agent definition cached.
+
+    A model already attached to an agent is retained for offline test doubles
+    and explicit caller overrides.
+    """
+
+    async def run():
+        if agent.model is not None:
+            return await agent.run(user_prompt, instructions=instructions)
+
+        model = build_model(model_name)
+        async with model:
+            return await agent.run(
+                user_prompt,
+                model=model,
+                instructions=instructions,
+            )
+
+    return asyncio.run(run())
+
+
+@lru_cache(maxsize=_AGENT_CACHE_SIZE)
 def get_triage_host_agent(model_name: str) -> Agent:
     return Agent(
-        build_model(model_name),
+        None,
         output_type=_structured(TriageDecision),
         instructions=TRIAGE_HOST_INSTRUCTIONS,
         model_settings=_MODEL_SETTINGS,
@@ -261,10 +308,10 @@ def get_triage_host_agent(model_name: str) -> Agent:
     )
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=_AGENT_CACHE_SIZE)
 def get_triage_network_agent(model_name: str) -> Agent:
     return Agent(
-        build_model(model_name),
+        None,
         output_type=_structured(TriageDecision),
         instructions=TRIAGE_NETWORK_INSTRUCTIONS,
         model_settings=_MODEL_SETTINGS,
@@ -273,10 +320,10 @@ def get_triage_network_agent(model_name: str) -> Agent:
     )
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=_AGENT_CACHE_SIZE)
 def get_host_extraction_agent(model_name: str) -> Agent:
     return Agent(
-        build_model(model_name),
+        None,
         output_type=_structured(HostIOCOutputList),
         instructions=HOST_EXTRACTION_INSTRUCTIONS,
         model_settings=_MODEL_SETTINGS,
@@ -285,10 +332,10 @@ def get_host_extraction_agent(model_name: str) -> Agent:
     )
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=_AGENT_CACHE_SIZE)
 def get_network_extraction_agent(model_name: str) -> Agent:
     return Agent(
-        build_model(model_name),
+        None,
         output_type=_structured(NetworkIOCOutputList),
         instructions=NETWORK_EXTRACTION_INSTRUCTIONS,
         model_settings=_MODEL_SETTINGS,
@@ -297,10 +344,10 @@ def get_network_extraction_agent(model_name: str) -> Agent:
     )
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=_AGENT_CACHE_SIZE)
 def get_timeline_extraction_agent(model_name: str) -> Agent:
     return Agent(
-        build_model(model_name),
+        None,
         output_type=_structured(TimelineOutputList),
         instructions=TIMELINE_EXTRACTION_INSTRUCTIONS,
         model_settings=_MODEL_SETTINGS,
@@ -309,10 +356,10 @@ def get_timeline_extraction_agent(model_name: str) -> Agent:
     )
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=_AGENT_CACHE_SIZE)
 def get_evaluation_agent(model_name: str, type_label: str) -> Agent:
     return Agent(
-        build_model(model_name),
+        None,
         output_type=_structured(EvaluationResult),
         instructions=evaluation_instructions(type_label),
         model_settings=_MODEL_SETTINGS,

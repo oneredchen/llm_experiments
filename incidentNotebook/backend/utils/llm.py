@@ -70,7 +70,7 @@ def list_models() -> list[str]:
     Short timeout and no retries: this powers a UI dropdown, so an unreachable
     server must fail fast (and surface as a clear 503) rather than hang.
     """
-    client = OpenAI(
+    with OpenAI(
         base_url=LLM_BASE_URL, api_key=LLM_API_KEY, timeout=5.0, max_retries=0
-    )
-    return [model.id for model in client.models.list()]
+    ) as client:
+        return [model.id for model in client.models.list()]

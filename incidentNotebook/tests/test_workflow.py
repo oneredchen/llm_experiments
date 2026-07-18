@@ -44,6 +44,16 @@ def main():
         logger.error(f"Could not connect to the LLM server at {LLM_BASE_URL} to get models: {e}")
         return
 
+    # Optional: restrict to specific models, e.g. EVAL_MODELS="gemma-4-26b,qwen3:30b"
+    eval_models = os.getenv("EVAL_MODELS")
+    if eval_models:
+        wanted = [m.strip() for m in eval_models.split(",") if m.strip()]
+        models = [m for m in models if m in wanted]
+        logger.info(f"EVAL_MODELS filter active — evaluating: {models}")
+        if not models:
+            logger.error("EVAL_MODELS matched nothing served by the server.")
+            return
+
     # Get case files
     case_files = sorted([f for f in os.listdir("cases") if f.endswith(".txt")])
 
