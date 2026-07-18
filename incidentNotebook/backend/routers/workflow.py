@@ -1,17 +1,13 @@
 from fastapi import APIRouter, HTTPException
-import os
 import logging
 from ..models import ExtractionRequest, ExtractionResponse
+from backend.utils import llm
 from backend.utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
 from backend.utils.database import (
     insert_host_iocs,
     insert_network_iocs,
     insert_timeline_events
 )
-from dotenv import load_dotenv
-
-load_dotenv()
-ollama_host = os.getenv("OLLAMA_HOST")
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -25,13 +21,12 @@ def extract_iocs(case_id: str, request: ExtractionRequest):
             llm_model=request.llm_model,
             case_id=case_id,
             incident_description=request.incident_description,
-            ollama_host=ollama_host
         )
 
         host_iocs = result.get("host_ioc_objects", [])
         network_iocs = result.get("network_ioc_objects", [])
         timeline_events = result.get("timeline_objects", [])
-        
+
         logger.info(f"Workflow finished. Extracted: {len(host_iocs)} host IOCs, {len(network_iocs)} network IOCs, {len(timeline_events)} timeline events.")
 
         # Insert results into database
@@ -67,7 +62,7 @@ def extract_iocs(case_id: str, request: ExtractionRequest):
                 timeline_event_dicts.append(event_dict)
             insert_timeline_events(timeline_event_dicts)
             counts["timeline_events"] = len(timeline_events)
-            
+
         logger.info(f"Successfully saved extraction results for case {case_id}")
 
         return {
@@ -79,16 +74,15 @@ def extract_iocs(case_id: str, request: ExtractionRequest):
     except Exception as e:
         logger.error(f"Error during IOC extraction for case {case_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/workflow/models")
 def get_models():
-    """Fetches available models from Ollama."""
+    """Lists models available on the configured OpenAI-compatible LLM server."""
     try:
-        from backend.utils.ioc_extraction_workflow import get_client
-        client = get_client(ollama_host)
-        response = client.list()
-        # Handle both object and dict response types if necessary, but we saw object properties
-        models = [m.model for m in response.models]
-        return {"models": models}
+        return {"models": llm.list_models()}
     except Exception as e:
-        logger.error(f"Error fetching models: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error fetching models from {llm.LLM_BASE_URL}: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Cannot reach LLM server at {llm.LLM_BASE_URL}. Is the server running?",
+        )

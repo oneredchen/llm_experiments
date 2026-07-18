@@ -5,10 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "ollama>=0.2.1",
     "pandas>=2.2.3",
     "sqlalchemy>=2.0.41",
-    "streamlit>=1.45.1",
     "python-json-logger>=2.0.7",
     "pyyaml>=6.0.2",
     "python-dotenv>=1.2.0",
@@ -16,4 +14,19 @@ dependencies = [
     "uvicorn>=0.38.0",
     "requests>=2.32.5",
     "langgraph>=0.2.0",
+    "pydantic-ai-slim[openai]>=2.13.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+# Live-server / live-LLM manual scripts — run directly, not via pytest.
+addopts = [
+    "--ignore=tests/test_api_refactor.py",
+    "--ignore=tests/test_workflow.py",
 ]

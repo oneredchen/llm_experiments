@@ -4,11 +4,11 @@ import sys
 # Add parent directory to sys.path to allow imports from root
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import json
-import ollama
 from backend.utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
+from backend.utils.llm import LLM_API_KEY, LLM_BASE_URL
 import logging
 from backend.utils.logging_config import setup_logging
-from dotenv import load_dotenv
+from openai import OpenAI
 
 STATE_FILE = "tests/test_state.json"
 
@@ -29,8 +29,6 @@ def main():
     """
     Main function to run the test workflow.
     """
-    load_dotenv()
-    ollama_host = os.getenv("OLLAMA_HOST")
     setup_logging("test.log")
     logger = logging.getLogger(__name__)
 
@@ -38,12 +36,12 @@ def main():
     if not os.path.exists("tests/test_results"):
         os.makedirs("tests/test_results")
 
-    # Get LLM models from Ollama
+    # Get LLM models from the configured OpenAI-compatible server
     try:
-        client = ollama.Client(host=ollama_host)
-        models = [model["model"] for model in client.list()["models"]]
+        client = OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY)
+        models = [model.id for model in client.models.list()]
     except Exception as e:
-        logger.error(f"Could not connect to Ollama to get models: {e}")
+        logger.error(f"Could not connect to the LLM server at {LLM_BASE_URL} to get models: {e}")
         return
 
     # Get case files
@@ -78,7 +76,6 @@ def main():
                     llm_model=model,
                     case_id=case_number,
                     incident_description=incident_description,
-                    ollama_host=ollama_host,
                 )
 
                 # Convert Pydantic models to dicts
