@@ -273,6 +273,47 @@ def test_evaluator_failure_returns_latest_valid_extraction(scripted):
     assert len(scripted["eval_host"].calls) > 1
 
 
+def test_request_scoped_model_is_entered_and_closed(monkeypatch):
+    scripted_model = ScriptedModel([CONTINUE])
+
+    class TrackingModel(FunctionModel):
+        def __init__(self):
+            super().__init__(scripted_model)
+            self.entered = 0
+            self.exited = 0
+
+        async def __aenter__(self):
+            self.entered += 1
+            return await super().__aenter__()
+
+        async def __aexit__(self, *args):
+            self.exited += 1
+            return await super().__aexit__(*args)
+
+    model = TrackingModel()
+    agent = Agent(None, output_type=NativeOutput(TriageDecision), name="model_lifecycle")
+    monkeypatch.setattr(agents, "build_model", lambda model_name: model)
+
+    result = agents.run_agent_sync(agent, MODEL, "Incident narrative.")
+
+    assert result.output == "continue"
+    assert model.entered == 1
+    assert model.exited == 1
+
+
+def test_agent_cache_is_bounded():
+    agents.get_triage_host_agent.cache_clear()
+    try:
+        for index in range(40):
+            agents.get_triage_host_agent(f"model-{index}")
+
+        cache_info = agents.get_triage_host_agent.cache_info()
+        assert cache_info.maxsize == 32
+        assert cache_info.currsize == 32
+    finally:
+        agents.get_triage_host_agent.cache_clear()
+
+
 # ---------------------------------------------------------------------------
 # Control-flow model validation
 # ---------------------------------------------------------------------------

@@ -22,11 +22,9 @@ Features a dual-architecture design with a **FastAPI backend** for programmatic 
 
 ## About The Project
 
-This application helps streamline the initial phases of an incident response by parsing natural language descriptions of security events. It leverages a locally-running LLM (via Ollama) to identify and categorize key information, which it then saves as structured SQL `INSERT` statements into a local SQLite database.
+This application helps streamline the initial phases of an incident response by parsing natural language descriptions of security events. It uses an OpenAI-compatible LLM server to identify and categorize key information, which it saves as structured records in a local SQLite database.
 
 This approach allows an analyst to quickly move from unstructured notes to a structured timeline and list of indicators, saving valuable time during an investigation.
-
-## Features
 
 ## Features
 

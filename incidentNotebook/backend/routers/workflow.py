@@ -1,5 +1,8 @@
-from fastapi import APIRouter, HTTPException
 import logging
+
+from fastapi import APIRouter, HTTPException
+from pydantic_ai.exceptions import ModelAPIError, ModelHTTPError
+
 from ..models import ExtractionRequest, ExtractionResponse
 from backend.utils import llm
 from backend.utils.ioc_extraction_workflow import ioc_extraction_agent_workflow
@@ -71,9 +74,36 @@ def extract_iocs(case_id: str, request: ExtractionRequest):
             "counts": counts
         }
 
+    except ModelHTTPError as e:
+        logger.error(
+            "LLM server rejected extraction for case %s using model %s "
+            "with upstream status %s: %s",
+            case_id,
+            request.llm_model,
+            e.status_code,
+            e,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                f"LLM server rejected model '{request.llm_model}' "
+                f"(upstream status {e.status_code})."
+            ),
+        ) from e
+    except ModelAPIError as e:
+        logger.error(
+            "LLM request failed for case %s using model %s: %s",
+            case_id,
+            request.llm_model,
+            e,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM request failed for model '{request.llm_model}'.",
+        ) from e
     except Exception as e:
         logger.error(f"Error during IOC extraction for case {case_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="IOC extraction failed.") from e
 
 @router.get("/workflow/models")
 def get_models():
